@@ -335,7 +335,7 @@ function checkMinLength(ele: HTMLInputElement, label?: string): boolean {
   }
   return false
 }
-function validOnBlur(event: Event | any): void {
+function validOnBlur(event: Event): void {
   const ele = event.target as HTMLInputElement
   if (!ele || ele.readOnly || ele.disabled) {
     return
@@ -420,17 +420,38 @@ function patternOnBlur(event: Event): void {
   }, 40)
 }
 
-function handleNumberFocus(ele: HTMLInputElement, v: string, locale?: Locale): void {
-  if (locale && locale.decimalSeparator !== ".") {
+function isCommaSeparator(locale?: Locale | null | string) {
+  if (!locale) {
+    return false
+  }
+  return typeof locale === "string" ? locale !== "." : locale.decimalSeparator !== "."
+}
+function correctNumber(v: string, locale?: Locale | null | string): string {
+  const l = v.length
+  if (l === 0) {
+    return v
+  }
+  if (isCommaSeparator(locale)) {
     v = v.replace(resources.num2, "")
   } else {
     v = v.replace(resources.num1, "")
   }
+  const arr: string[] = []
+  for (let i = 0; i < l; i++) {
+    if (v[i] >= "0" && v[i] <= "9" || v[i] == "." || v[i] == ",") {
+      arr.push(v[i])
+    }
+  }
+  return arr.join("")
+}
+
+function handleNumberFocus(ele: HTMLInputElement, v: string, locale?: Locale | null | string): void {
+  v = correctNumber(v, locale)
   if (v !== ele.value) {
     ele.value = v
   }
 }
-function numberOnFocus(event: Event | any, locale?: Locale): void {
+function numberOnFocus(event: Event, locale?: Locale): void {
   const ele = event.currentTarget as HTMLInputElement
   handleMaterialFocus(ele)
   if (ele.readOnly || ele.disabled || ele.value.length === 0) {
@@ -440,22 +461,124 @@ function numberOnFocus(event: Event | any, locale?: Locale): void {
     handleNumberFocus(ele, v, locale)
   }
 }
-function percentageOnFocus(event: Event, locale?: Locale) {
-  const ele = event.currentTarget as HTMLInputElement
-  handleMaterialFocus(ele)
-  if (ele.readOnly || ele.disabled || ele.value.length === 0) {
-    return
+function validateMinMax(ele: HTMLInputElement, n: number, label: string, resource: StringMap, locale?: Locale | null | string): boolean {
+  if (ele.min.length > 0) {
+    const min = parseFloat(ele.min);
+    if (n < min) {
+      let msg = format(resource["error_min"], label, min);
+      if (ele.max.length > 0) {
+        const max = parseFloat(ele.max);
+        if (max === min) {
+          msg = format(resource['error_equal'], label, max);
+        }
+      }
+      addErrorMessage(ele, msg);
+      return false;
+    }
   }
-  let v = ele.value
-  setTimeout(() => {
-    if (locale && locale.decimalSeparator !== ".") {
-      v = v.replace(resources.num2, "")
-    } else {
-      v = v.replace(resources.num1, "")
+  if (ele.max.length > 0) {
+    const max = parseFloat(ele.max);
+    if (n > max) {
+      const msg = format(resource["error_max"], label, max);
+      addErrorMessage(ele, msg);
+      return false;
     }
-    v = v.replace("%", "")
-    if (v !== ele.value) {
-      ele.value = v
+  }
+  const minField = ele.getAttribute('min-field');
+  if (minField && minField.length > 0) {
+    const form = ele.form;
+    if (form) {
+      const ctrl2 = getElement(form, minField) as HTMLInputElement;
+      if (ctrl2) {
+        let smin2 = correctNumber(ctrl2.value, locale); // const smin2 = ctrl2.value.replace(this._nreg, '');
+        if (smin2.length > 0 && !isNaN(smin2 as any)) {
+          const min2 = parseFloat(smin2);
+          if (n < min2) {
+            const minLabel = getLabel(ctrl2);
+            const msg = format(resource['error_min'], label, minLabel);
+            addErrorMessage(ele, msg);
+            return false;
+          }
+        }
+      }
     }
-  }, 0)
+  }
+  return true;
+}
+function checkNumber(event: Event, locale?: Locale | string | null ): boolean | string {
+  const ctrl = event.currentTarget as HTMLInputElement;
+  if (!ctrl || ctrl.readOnly || ctrl.disabled) {
+    return true;
+  }
+  materialOnBlur(event);
+  removeError(ctrl);
+  ctrl.value = ctrl.value.trim()
+  const value = correctNumber(ctrl.value, locale);
+  const label = getLabel(ctrl);
+  if (checkRequired(ctrl, label)) {
+    return false;
+  }
+  const r = getResource();
+  if (value.length > 0) {
+    if (isNaN(value as any)) {
+      
+      const msg = format(r["error_number"], label);
+      addErrorMessage(ctrl, msg);
+      return false;
+    }
+    const n = parseFloat(value);
+    if (!validateMinMax(ctrl, n, label, r, locale)) {
+      return false;
+    }
+    removeError(ctrl);
+    return value
+  }
+  return true
+}
+function checkNumberOnBlur(event: Event) {
+  const ctrl = event.currentTarget as HTMLInputElement;
+  const decimalSeparator = ctrl.getAttribute("data-decimal-separator")
+  const v = checkNumber(event, decimalSeparator)
+  if (typeof v === "string") {
+    ctrl.value = v
+  }
+}
+function numberOnBlur(event: Event) {
+  const ctrl = event.currentTarget as HTMLInputElement;
+  const decimalSeparator = ctrl.getAttribute("data-decimal-separator")
+  const v = checkNumber(event, decimalSeparator)
+  if (typeof v === "string") {
+    const attr = ctrl.getAttribute("data-scale")
+    const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
+    const n = parseFloat(v)
+    ctrl.value = formatNumber(n, scale, decimalSeparator)
+  }
+}
+function formatNumber(v: number, scale?: number, d?: string | null, g?: string): string {
+  if (!v) {
+    return '';
+  }
+  if (!d && !g) {
+    g = ',';
+    d = '.';
+  } else if (!g) {
+    g = (d === ',' ? '.' : ',');
+  }
+  const s = (scale === 0 || scale ? v.toFixed(scale) : v.toString());
+  const x = s.split('.', 2);
+  const y = x[0];
+  const arr: string[] = [];
+  const len = y.length - 1;
+  for (let k = 0; k < len; k++) {
+    arr.push(y[len - k]);
+    if ((k + 1) % 3 === 0) {
+      arr.push(g);
+    }
+  }
+  arr.push(y[0]);
+  if (x.length === 1) {
+    return arr.reverse().join('');
+  } else {
+    return arr.reverse().join('') + d + x[1];
+  }
 }
