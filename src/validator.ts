@@ -1,3 +1,6 @@
+interface StringMap {
+  [key: string]: string
+}
 interface ErrorMessage {
   field: string
   code: string
@@ -333,14 +336,14 @@ function getLabel(ele?: HTMLElement | null): string {
   }
   return ""
 }
-function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string): boolean {
+function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string, r?: StringMap): boolean {
   const value = ele.value
   if (ele.required) {
     if (value.length === 0) {
       if (!label) {
         label = getLabel(ele)
       }
-      const resource = getResource()
+      const resource = r ? r : getResource()
       const msg = format(resource["error_required"], label)
       addErrorMessage(ele, msg)
       return true
@@ -348,24 +351,24 @@ function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string
   }
   return false
 }
-function checkMaxLength(ele: HTMLInputElement, label?: string): boolean {
+function checkMaxLength(ele: HTMLInputElement, label?: string, r?: StringMap): boolean {
   if (ele.value.length > ele.maxLength) {
     if (!label) {
       label = getLabel(ele)
     }
-    const resource = getResource()
+    const resource = r ? r : getResource()
     const msg = format(resource["error_maxlength"], label, ele.maxLength)
     addErrorMessage(ele, msg)
     return true
   }
   return false
 }
-function checkMinLength(ele: HTMLInputElement, label?: string): boolean {
+function checkMinLength(ele: HTMLInputElement, label?: string, r?: StringMap): boolean {
   if (ele.value.length < ele.minLength) {
     if (!label) {
       label = getLabel(ele)
     }
-    const resource = getResource()
+    const resource = r ? r : getResource()
     const msg = format(resource["error_minlength"], label, ele.maxLength)
     addErrorMessage(ele, msg)
     return true
@@ -399,7 +402,9 @@ function checkOnBlur(event: Event, key: string, check: (v: string | null | undef
   removeError(ele)
   setTimeout(() => {
     ele.value = ele.value.trim()
-    if (checkRequired(ele) || checkMinLength(ele) || checkMaxLength(ele)) {
+    const label = getLabel(ele)
+    const resource = getResource()
+    if (checkRequired(ele, label, resource) || checkMinLength(ele, label, resource) || checkMaxLength(ele, label, resource)) {
       return
     }
     let value = ele.value
@@ -407,8 +412,6 @@ function checkOnBlur(event: Event, key: string, check: (v: string | null | undef
       value = formatF(value)
     }
     if (value.length > 0 && !check(value)) {
-      const label = getLabel(ele)
-      const resource = getResource()
       const msg = format(resource[key], label, ele.maxLength)
       addErrorMessage(ele, msg)
     }
@@ -457,6 +460,98 @@ function patternOnBlur(event: Event): void {
   }, 40)
 }
 
+function dateOnBlur(event: Event) {
+  const target = event.currentTarget as HTMLInputElement
+  if (!target || target.readOnly || target.disabled) {
+    return true
+  }
+  materialOnBlur(event)
+  removeError(target)
+  const label = getLabel(target)
+  const resource = getResource()
+  checkDate(target, label, resource)
+}
+function checkDate(ele: HTMLInputElement, label: string, resource: StringMap): boolean {
+  const v = new Date(ele.value)
+  if (isNaN(v.getTime())) {
+    const msg = format(resource["error_date"], label)
+    addErrorMessage(ele, msg)
+    return false
+  } else {
+    if (ele.min.length > 0) {
+      if (ele.min === "now") {
+        const d = new Date()
+        if (v < d) {
+          if (v < d) {
+            const msg = format(resource["error_from_now"], label)
+            addErrorMessage(ele, msg)
+            return false
+          }
+        }
+      } else if (ele.min === "tomorrow") {
+        const d = addDays(trimTime(new Date()), 1)
+        if (v < d) {
+          const msg = format(resource["error_from_tomorrow"], label)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      } else {
+        const d = new Date(ele.min)
+        if (!isNaN(d.getTime())) {
+          const v2 = formatLongDateTime(d, "YYYY-MM-DD")
+          let msg = format(resource["error_from"], label, v2)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      }
+    }
+    if (ele.max.length > 0) {
+      if (ele.max === "now") {
+        const d = new Date()
+        if (v < d) {
+          if (v < d) {
+            const msg = format(resource["error_after_now"], label)
+            addErrorMessage(ele, msg)
+            return false
+          }
+        }
+      } else if (ele.max === "tomorrow") {
+        const d = addDays(trimTime(new Date()), 1)
+        if (v < d) {
+          const msg = format(resource["error_after_tomorrow"], label)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      } else {
+        const d = new Date(ele.max)
+        if (!isNaN(d.getTime())) {
+          const v2 = formatLongDateTime(d, "YYYY-MM-DD")
+          let msg = format(resource["error_after"], label, v2)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      }
+    }
+    const minField = ele.getAttribute("min-field")
+    if (minField && minField.length > 0) {
+      const form = ele.form
+      if (form) {
+        const minElement = getElement(form, minField) as HTMLInputElement
+        if (minElement && minElement.value.length > 0) {
+          const min = new Date(minElement.value)
+          if (v < min) {
+            const minLabel = getLabel(minElement)
+            const msg = format(resource["error_from"], label, minLabel)
+            addErrorMessage(minElement, msg)
+            return false
+          }
+        }
+      }
+    }
+  }
+
+  return true
+}
 function isCommaSeparator(locale?: Locale | null | string) {
   if (!locale) {
     return false
@@ -667,6 +762,9 @@ function formatNumber(v: number, scale?: number, d?: string | null, g?: string):
   }
 }
 
+function validateOnBlur(event: Event, includeReadOnly?: boolean): void {
+  validateElement(event.target as HTMLInputElement, undefined, includeReadOnly)
+}
 function validateElement(ele: HTMLInputElement, locale?: Locale | string | null, includeReadOnly?: boolean): boolean {
   if (!ele) {
     return true
@@ -704,14 +802,15 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
   let value = ele.value
 
   const label = getLabel(ele)
-  if (checkRequired(ele, label) || checkMinLength(ele, label) || checkMaxLength(ele, label)) {
+  const resource = getResource()
+  if (checkRequired(ele, label, resource) || checkMinLength(ele, label, resource) || checkMaxLength(ele, label, resource)) {
     return false
   }
 
   if (!value || value === "") {
     return true
   }
-  const resource = getResource()
+
   let ctype = ele.getAttribute("type")
   if (ctype) {
     ctype = ctype.toLowerCase()
@@ -758,6 +857,11 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
       } else {
         ele.value = formatNumber(n, scale, decimalSeparator)
       }
+    }
+  } else if (ctype === "date" || ctype === "datetime-local") {
+    const valid = checkDate(ele, label, resource)
+    if (!valid) {
+      return false
     }
   } else if (datatype === "url") {
     if (!isUrl(value)) {
@@ -865,7 +969,7 @@ function isValidForm(form: HTMLFormElement, focusFirst?: boolean, scroll?: boole
     const ctrl = form[i] as HTMLInputElement
     const parent = ctrl.parentElement
     if (ctrl.classList.contains("invalid") || ctrl.classList.contains("ng-invalid") || (parent && parent.classList.contains("invalid"))) {
-      if (!focusFirst) {
+      if (focusFirst !== false && !focusFirst) {
         focusFirst = true
       }
       if (ctrl && focusFirst) {
@@ -879,7 +983,7 @@ function isValidForm(form: HTMLFormElement, focusFirst?: boolean, scroll?: boole
   }
   return valid
 }
-function validateForm(form?: HTMLFormElement, locale?: Locale, focusFirst?: boolean, scroll?: boolean, includeReadOnly?: boolean): boolean {
+function validateForm(form?: HTMLFormElement, locale?: Locale | string | null, focusFirst?: boolean, scroll?: boolean, includeReadOnly?: boolean): boolean {
   if (!form) {
     return true
   }
@@ -906,7 +1010,7 @@ function validateForm(form?: HTMLFormElement, locale?: Locale, focusFirst?: bool
       }
     }
   }
-  if (!focusFirst) {
+  if (focusFirst !== false && !focusFirst) {
     focusFirst = true
   }
   if (errorCtrl !== null && focusFirst === true) {

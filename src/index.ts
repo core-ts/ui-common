@@ -100,6 +100,202 @@ function trimNull(obj: any): any {
 function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
+//detect Ctrl + [a, v, c, x]
+function detectCtrlKeyCombination(e: any) {
+  // list all CTRL + key combinations
+  var forbiddenKeys = new Array("v", "a", "x", "c")
+  var key
+  var isCtrl
+  var browser = navigator.appName
+
+  if (browser == "Microsoft Internet Explorer") {
+    key = e.keyCode
+    // IE
+    if (e.ctrlKey) {
+      isCtrl = true
+    } else {
+      isCtrl = false
+    }
+  } else {
+    if (browser == "Netscape") {
+      key = e.which
+      // firefox, Netscape
+      if (e.ctrlKey) isCtrl = true
+      else isCtrl = false
+    } else return true
+  }
+
+  // if ctrl is pressed check if other key is in forbidenKeys array
+  if (isCtrl) {
+    var chr = String.fromCharCode(key).toLowerCase()
+    for (let i = 0; i < forbiddenKeys.length; i++) {
+      if (forbiddenKeys[i] == chr) {
+        return true
+      }
+    }
+  }
+  return false
+}
+function digitOnKeyPress(e: Event) {
+  if (detectCtrlKeyCombination(e)) {
+    return true
+  }
+  const key = window.event ? (e as any).keyCode : (e as any).which
+  var keychar = String.fromCharCode(key)
+  if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t" || keychar == "-") {
+    return key
+  }
+  var reg = /\d/
+  return reg.test(keychar)
+}
+function integerOnKeyPress(e: Event) {
+  if (detectCtrlKeyCombination(e)) {
+    return true
+  }
+  const key = window.event ? (e as any).keyCode : (e as any).which
+  var ctrl = e.target as HTMLInputElement
+  var keychar = String.fromCharCode(key)
+  let min: number | undefined
+  if (!isNaN(ctrl.min as any)) {
+    min = parseInt(ctrl.min)
+  }
+  if (min && min >= 0) {
+    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
+      return key
+    }
+  } else {
+    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t" || keychar == "-") {
+      return key
+    }
+  }
+  var reg = /\d/
+  return reg.test(keychar)
+}
+function numberOnKeyPress(e: Event) {
+  if (detectCtrlKeyCombination(e)) {
+    return true
+  }
+  const key = window.event ? (e as any).keyCode : (e as any).which
+  const keychar = String.fromCharCode(key)
+  const ctrl = e.target as HTMLInputElement
+  let min: number | undefined
+  if (!isNaN(ctrl.min as any)) {
+    min = parseInt(ctrl.min)
+  }
+  if (min && min >= 0) {
+    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
+      return key
+    }
+  } else {
+    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t" || keychar == "-") {
+      return key
+    }
+  }
+  if (keychar == ".") {
+    var str = ctrl.value
+    if (str != "" && str.indexOf(".") < 0) {
+      return key
+    }
+  }
+  var reg = /\d/
+  return reg.test(keychar)
+}
+function trimTime(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+}
+function addDays(d: Date, n: number): Date {
+  const newDate = new Date(d)
+  newDate.setDate(newDate.getDate() + n)
+  return newDate
+}
+function formatDate(d: Date | null | undefined, dateFormat?: string, full?: boolean, upper?: boolean): string {
+  if (!d) {
+    return ""
+  }
+  let format = dateFormat && dateFormat.length > 0 ? dateFormat : "M/D/YYYY"
+  if (upper) {
+    format = format.toUpperCase()
+  }
+  let arr = ["", "", ""]
+  const items = format.split(/\/|\.| |-/)
+  let iday = items.indexOf("D")
+  let im = items.indexOf("M")
+  let iyear = items.indexOf("YYYY")
+  let fm = full ? full : false
+  let fd = full ? full : false
+  let fy = true
+  if (iday === -1) {
+    iday = items.indexOf("DD")
+    fd = true
+  }
+  if (im === -1) {
+    im = items.indexOf("MM")
+    fm = true
+  }
+  if (iyear === -1) {
+    iyear = items.indexOf("YY")
+    fy = full ? full : false
+  }
+  arr[iday] = getD(d.getDate(), fd)
+  arr[im] = getD(d.getMonth() + 1, fm)
+  arr[iyear] = getYear(d.getFullYear(), fy)
+  const s = detectSeparator(format)
+  const e = detectLastSeparator(format)
+  const l = items.length === 4 ? format[format.length - 1] : ""
+  return arr[0] + s + arr[1] + e + arr[2] + l
+}
+function detectSeparator(format: string): string {
+  const len = format.length
+  for (let i = 0; i < len; i++) {
+    const c = format[i]
+    if (!((c >= "A" && c <= "Z") || (c >= "a" && c <= "z"))) {
+      return c
+    }
+  }
+  return "/"
+}
+function detectLastSeparator(format: string): string {
+  const len = format.length - 3
+  for (let i = len; i > -0; i--) {
+    const c = format[i]
+    if (!((c >= "A" && c <= "Z") || (c >= "a" && c <= "z"))) {
+      return c
+    }
+  }
+  return "/"
+}
+function getYear(y: number, full?: boolean): string {
+  if (full || (y <= 99 && y >= -99)) {
+    return y.toString()
+  }
+  const s = y.toString()
+  return s.substring(s.length - 2)
+}
+function getD(n: number, fu: boolean): string {
+  return fu ? pad(n) : n.toString()
+}
+function formatLongTime(d: Date): string {
+  return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds())
+}
+function pad(n: number): string {
+  return n < 10 ? "0" + n : n.toString()
+}
+function pad3(n: number): string {
+  if (n >= 100) {
+    return n.toString()
+  }
+  return n < 10 ? "00" + n : "0" + n.toString()
+}
+function formatLongDateTime(date: Date | null | undefined, dateFormat?: string, full?: boolean, upper?: boolean): string {
+  if (!date) {
+    return ""
+  }
+  const sd = formatDate(date, dateFormat, full, upper)
+  if (sd.length === 0) {
+    return sd
+  }
+  return sd + " " + formatLongTime(date)
+}
 
 function getElement(form: HTMLFormElement | undefined | null, name: string): Element | null {
   if (form) {
