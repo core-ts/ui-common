@@ -243,14 +243,51 @@ function isEmpty(str: string | null | undefined): boolean {
 }
 function isValidPattern(v: string, pattern: string, flags?: string | null): boolean {
   if (!isEmpty(pattern)) {
-    if (!flags) {
-      flags = "g"
+    if (flags === null) {
+      flags = undefined
     }
     const p = new RegExp(pattern, flags)
     return p.test(v)
   } else {
     return false
   }
+}
+function isValidCode(str: string): boolean {
+  return resources.digitAndChar.test(str)
+}
+function isDashCode(str: string | null | undefined): boolean {
+  if (!str || str.length === 0) {
+    return false
+  }
+  const len = str.length - 1
+  for (let i = 0; i <= len; i++) {
+    const chr = str.charAt(i)
+    if (!((chr >= "0" && chr <= "9") || (chr >= "A" && chr <= "Z") || (chr >= "a" && chr <= "z") || chr === "-")) {
+      return false
+    }
+  }
+  return true
+}
+function isDigitOnly(v: string | null | undefined): boolean {
+  if (!v) {
+    return false
+  }
+  return resources.digit.test(v)
+}
+function isDashDigit(v: string): boolean {
+  return resources.digitAndDash.test(v)
+}
+function isCheckNumber(v: string): boolean {
+  return resources.checkNumber.test(v)
+}
+function isAmountNumber(v: string): boolean {
+  return resources.amount.test(v)
+}
+function isUSPostalCode(postcode: string): boolean {
+  return resources.usPostcode.test(postcode)
+}
+function isCAPostalCode(postcode: string): boolean {
+  return resources.caPostcode.test(postcode)
 }
 
 function format(...args: any[]): string {
@@ -438,7 +475,7 @@ function correctNumber(v: string, locale?: Locale | null | string): string {
   }
   const arr: string[] = []
   for (let i = 0; i < l; i++) {
-    if (v[i] >= "0" && v[i] <= "9" || v[i] == "." || v[i] == ",") {
+    if ((v[i] >= "0" && v[i] <= "9") || v[i] == "." || v[i] == ",") {
       arr.push(v[i])
     }
   }
@@ -463,122 +500,439 @@ function numberOnFocus(event: Event, locale?: Locale): void {
 }
 function validateMinMax(ele: HTMLInputElement, n: number, label: string, resource: StringMap, locale?: Locale | null | string): boolean {
   if (ele.min.length > 0) {
-    const min = parseFloat(ele.min);
+    const min = parseFloat(ele.min)
     if (n < min) {
-      let msg = format(resource["error_min"], label, min);
+      let msg = format(resource["error_min"], label, min)
       if (ele.max.length > 0) {
-        const max = parseFloat(ele.max);
+        const max = parseFloat(ele.max)
         if (max === min) {
-          msg = format(resource['error_equal'], label, max);
+          msg = format(resource["error_equal"], label, max)
         }
       }
-      addErrorMessage(ele, msg);
-      return false;
+      addErrorMessage(ele, msg)
+      return false
     }
   }
   if (ele.max.length > 0) {
-    const max = parseFloat(ele.max);
+    const max = parseFloat(ele.max)
     if (n > max) {
-      const msg = format(resource["error_max"], label, max);
-      addErrorMessage(ele, msg);
-      return false;
+      const msg = format(resource["error_max"], label, max)
+      addErrorMessage(ele, msg)
+      return false
     }
   }
-  const minField = ele.getAttribute('min-field');
+  const minField = ele.getAttribute("min-field")
   if (minField && minField.length > 0) {
-    const form = ele.form;
+    const form = ele.form
     if (form) {
-      const ctrl2 = getElement(form, minField) as HTMLInputElement;
-      if (ctrl2) {
-        let smin2 = correctNumber(ctrl2.value, locale); // const smin2 = ctrl2.value.replace(this._nreg, '');
+      const minElement = getElement(form, minField) as HTMLInputElement
+      if (minElement) {
+        let smin2 = correctNumber(minElement.value, locale) // const smin2 = minElement.value.replace(this._nreg, '');
         if (smin2.length > 0 && !isNaN(smin2 as any)) {
-          const min2 = parseFloat(smin2);
+          const min2 = parseFloat(smin2)
           if (n < min2) {
-            const minLabel = getLabel(ctrl2);
-            const msg = format(resource['error_min'], label, minLabel);
-            addErrorMessage(ele, msg);
-            return false;
+            const minLabel = getLabel(minElement)
+            const msg = format(resource["error_min"], label, minLabel)
+            addErrorMessage(ele, msg)
+            return false
           }
         }
       }
     }
   }
-  return true;
+  return true
 }
-function checkNumber(event: Event, locale?: Locale | string | null ): boolean | string {
-  const ctrl = event.currentTarget as HTMLInputElement;
-  if (!ctrl || ctrl.readOnly || ctrl.disabled) {
-    return true;
+function checkNumberEvent(event: Event, locale?: Locale | string | null): boolean | string {
+  const target = event.currentTarget as HTMLInputElement
+  if (!target || target.readOnly || target.disabled) {
+    return true
   }
-  materialOnBlur(event);
-  removeError(ctrl);
-  ctrl.value = ctrl.value.trim()
-  const value = correctNumber(ctrl.value, locale);
-  const label = getLabel(ctrl);
-  if (checkRequired(ctrl, label)) {
-    return false;
+  materialOnBlur(event)
+  removeError(target)
+  target.value = target.value.trim()
+  return checkNumber(target, locale)
+}
+function checkNumber(target: HTMLInputElement, locale?: Locale | string | null, r?: StringMap): boolean | string {
+  const value = correctNumber(target.value, locale)
+  const label = getLabel(target)
+  if (checkRequired(target, label)) {
+    return false
   }
-  const r = getResource();
+  const resource = r ? r : getResource()
   if (value.length > 0) {
     if (isNaN(value as any)) {
-      
-      const msg = format(r["error_number"], label);
-      addErrorMessage(ctrl, msg);
-      return false;
+      const msg = format(resource["error_number"], label)
+      addErrorMessage(target, msg)
+      return false
+    } else if (target.getAttribute("data-type") === "integer") {
+      const msg = format(resource["error_integer"], label)
+      addErrorMessage(target, msg)
+      return false
     }
-    const n = parseFloat(value);
-    if (!validateMinMax(ctrl, n, label, r, locale)) {
-      return false;
+    const n = parseFloat(value)
+    if (!validateMinMax(target, n, label, resource, locale)) {
+      return false
     }
-    removeError(ctrl);
+    removeError(target)
     return value
   }
   return true
 }
+function getDecimalSeparator(ele: HTMLInputElement): string | null {
+  const decimalSeparator = ele.getAttribute("data-decimal-separator")
+  if (!decimalSeparator) {
+    const form = ele.form
+    if (form) {
+      return form.getAttribute("data-decimal-separator")
+    }
+  }
+  return decimalSeparator
+}
 function checkNumberOnBlur(event: Event) {
-  const ctrl = event.currentTarget as HTMLInputElement;
-  const decimalSeparator = ctrl.getAttribute("data-decimal-separator")
-  const v = checkNumber(event, decimalSeparator)
+  const target = event.currentTarget as HTMLInputElement
+  const decimalSeparator = target.getAttribute("data-decimal-separator")
+  const v = checkNumberEvent(event, decimalSeparator)
   if (typeof v === "string") {
-    ctrl.value = v
+    target.value = v
   }
 }
 function numberOnBlur(event: Event) {
-  const ctrl = event.currentTarget as HTMLInputElement;
-  const decimalSeparator = ctrl.getAttribute("data-decimal-separator")
-  const v = checkNumber(event, decimalSeparator)
+  const target = event.currentTarget as HTMLInputElement
+  const decimalSeparator = target.getAttribute("data-decimal-separator")
+  const v = checkNumberEvent(event, decimalSeparator)
   if (typeof v === "string") {
-    const attr = ctrl.getAttribute("data-scale")
+    const attr = target.getAttribute("data-scale")
     const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
     const n = parseFloat(v)
-    ctrl.value = formatNumber(n, scale, decimalSeparator)
+    target.value = formatNumber(n, scale, decimalSeparator)
+  }
+}
+function currencyOnBlur(event: Event) {
+  const target = event.currentTarget as HTMLInputElement
+  const decimalSeparator = target.getAttribute("data-decimal-separator")
+  const v = checkNumberEvent(event, decimalSeparator)
+  if (typeof v === "string") {
+    const attr = target.getAttribute("data-scale")
+    const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
+    const n = parseFloat(v)
+    const value = formatNumber(n, scale, decimalSeparator)
+    target.value = formatCurrency(value, target)
+  }
+}
+function formatCurrency(v: string, ele: HTMLInputElement): string {
+  const symbol = ele.getAttribute("data-currency-symbol")
+  if (!symbol) {
+    return v
+  } else {
+    const pattern = ele.getAttribute("data-currency-pattern")
+    if (!pattern) {
+      return symbol + v
+    } else if (pattern === "1") {
+      return v + symbol
+    } else if (pattern === "2") {
+      return symbol + " " + v
+    } else if (pattern === "3") {
+      return v + " " + symbol
+    } else {
+      return symbol + v
+    }
   }
 }
 function formatNumber(v: number, scale?: number, d?: string | null, g?: string): string {
   if (!v) {
-    return '';
+    return ""
   }
   if (!d && !g) {
-    g = ',';
-    d = '.';
+    g = ","
+    d = "."
   } else if (!g) {
-    g = (d === ',' ? '.' : ',');
+    g = d === "," ? "." : ","
   }
-  const s = (scale === 0 || scale ? v.toFixed(scale) : v.toString());
-  const x = s.split('.', 2);
-  const y = x[0];
-  const arr: string[] = [];
-  const len = y.length - 1;
+  const s = scale === 0 || scale ? v.toFixed(scale) : v.toString()
+  const x = s.split(".", 2)
+  const y = x[0]
+  const arr: string[] = []
+  const len = y.length - 1
   for (let k = 0; k < len; k++) {
-    arr.push(y[len - k]);
+    arr.push(y[len - k])
     if ((k + 1) % 3 === 0) {
-      arr.push(g);
+      arr.push(g)
     }
   }
-  arr.push(y[0]);
+  arr.push(y[0])
   if (x.length === 1) {
-    return arr.reverse().join('');
+    return arr.reverse().join("")
   } else {
-    return arr.reverse().join('') + d + x[1];
+    return arr.reverse().join("") + d + x[1]
   }
+}
+
+function validateElement(ele: HTMLInputElement, locale?: Locale | string | null, includeReadOnly?: boolean): boolean {
+  if (!ele) {
+    return true
+  }
+
+  if (!ele || (ele.readOnly && includeReadOnly === false) || ele.disabled || ele.hidden || ele.style.display === "none") {
+    return true
+  }
+  let nodeName = ele.nodeName
+  if (nodeName === "INPUT") {
+    const type = ele.getAttribute("type")
+    if (type !== null) {
+      nodeName = type.toUpperCase()
+    }
+  }
+  if (ele.tagName === "SELECT") {
+    nodeName = "SELECT"
+  }
+  if (nodeName === "BUTTON" || nodeName === "RESET" || nodeName === "SUBMIT") {
+    return true
+  }
+
+  const parent = getContainer(ele)
+  if (parent) {
+    if (parent.hidden || parent.style.display === "none") {
+      return true
+    } else {
+      const p = findParent(parent, "SECTION")
+      if (p && (p.hidden || p.style.display === "none")) {
+        return true
+      }
+    }
+  }
+
+  let value = ele.value
+
+  const label = getLabel(ele)
+  if (checkRequired(ele, label) || checkMinLength(ele, label) || checkMaxLength(ele, label)) {
+    return false
+  }
+
+  if (!value || value === "") {
+    return true
+  }
+  const resource = getResource()
+  let ctype = ele.getAttribute("type")
+  if (ctype) {
+    ctype = ctype.toLowerCase()
+  }
+  let datatype = ele.getAttribute("data-type")
+  if (ctype === "email") {
+    datatype = "email"
+  } else if (ctype === "url") {
+    datatype = "url"
+  } else if (!datatype) {
+    if (ctype === "number") {
+      datatype = "number"
+    } else if (ctype === "date" || ctype === "datetime-local") {
+      datatype = "date"
+    }
+  }
+
+  if (ele.pattern && ele.pattern.length > 0) {
+    let flags = ele.getAttribute("data-flags")
+    if (!isValidPattern(value, ele.pattern, flags)) {
+      let msg = ele.getAttribute("data-error-message")
+      if (!msg) {
+        msg = "Pattern Error"
+      }
+      addErrorMessage(ele, msg)
+      return false
+    }
+  }
+  if (datatype === "email") {
+    if (value.length > 0 && !isEmail(value)) {
+      const msg = format(resource["error_email"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "number" || datatype === "integer" || datatype === "currency" || datatype === "string-currency" || datatype === "percentage") {
+    const v = checkNumber(ele, locale, resource)
+    const decimalSeparator = getDecimalSeparator(ele)
+    if (typeof v === "string") {
+      const attr = ele.getAttribute("data-scale")
+      const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
+      const n = parseFloat(v)
+      if (datatype === "currency" || datatype === "string-currency") {
+        ele.value = formatCurrency(value, ele)
+      } else {
+        ele.value = formatNumber(n, scale, decimalSeparator)
+      }
+    }
+  } else if (datatype === "url") {
+    if (!isUrl(value)) {
+      const msg = format(resource["error_url"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "phone") {
+    const phoneStr = formatter.removePhoneFormat(value)
+    if (!tel.isPhone(phoneStr)) {
+      const msg = format(resource["error_phone"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "fax") {
+    const phoneStr = formatter.removeFaxFormat(value)
+    if (!tel.isFax(phoneStr)) {
+      const msg = format(resource["error_fax"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "code") {
+    if (!isValidCode(value)) {
+      const msg = format(resource["error_code"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "dash-code") {
+    if (!isDashCode(value)) {
+      const msg = format(resource["error_dash_code"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "digit") {
+    if (!isDigitOnly(value)) {
+      const msg = format(resource["error_digit"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "dash-digit") {
+    if (!isDashDigit(value)) {
+      const msg = format(resource["error_dash_digit"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "routing-number") {
+    // business-tax-id
+    if (!isDashDigit(value)) {
+      const msg = format(resource["error_routing_number"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "check-number") {
+    if (!isCheckNumber(value)) {
+      const msg = format(resource["error_check_number"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "post-code") {
+    let countryCode = ele.getAttribute("country-code")
+    if (countryCode) {
+      countryCode = countryCode.toUpperCase()
+      if (countryCode === "US" || countryCode === "USA") {
+        if (!isUSPostalCode(value)) {
+          const msg = format(resource["error_us_post_code"], label)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      } else if (countryCode === "CA" || countryCode === "CAN") {
+        if (!isCAPostalCode(value)) {
+          const msg = format(resource["error_ca_post_code"], label)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      } else {
+        if (!isDashCode(value)) {
+          const msg = format(resource["error_post_code"], label)
+          addErrorMessage(ele, msg)
+          return false
+        }
+      }
+    }
+  } else if (datatype === "ipv4") {
+    if (!isIPv4(value)) {
+      const msg = format(resource["error_ipv4"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  } else if (datatype === "ipv6") {
+    if (!isIPv6(value)) {
+      const msg = format(resource["error_ipv6"], label)
+      addErrorMessage(ele, msg)
+      return false
+    }
+  }
+  removeError(ele)
+  return true
+}
+
+function isValidForm(form: HTMLFormElement, focusFirst?: boolean, scroll?: boolean): boolean {
+  const valid = true
+  let i = 0
+  const len = form.length
+  for (i = 0; i < len; i++) {
+    const ctrl = form[i] as HTMLInputElement
+    const parent = ctrl.parentElement
+    if (ctrl.classList.contains("invalid") || ctrl.classList.contains("ng-invalid") || (parent && parent.classList.contains("invalid"))) {
+      if (!focusFirst) {
+        focusFirst = true
+      }
+      if (ctrl && focusFirst) {
+        ctrl.focus()
+        if (scroll) {
+          ctrl.scrollIntoView()
+        }
+      }
+      return false
+    }
+  }
+  return valid
+}
+function validateForm(form?: HTMLFormElement, locale?: Locale, focusFirst?: boolean, scroll?: boolean, includeReadOnly?: boolean): boolean {
+  if (!form) {
+    return true
+  }
+  let valid = true
+  let errorCtrl: HTMLInputElement | null = null
+  let i = 0
+  const len = form.length
+  for (i = 0; i < len; i++) {
+    const ctrl = form[i] as HTMLInputElement
+    let type = ctrl.getAttribute("type")
+    if (type != null) {
+      type = type.toLowerCase()
+    }
+    if (type === "checkbox" || type === "radio" || type === "submit" || type === "button" || type === "reset") {
+      continue
+    } else {
+      if (!validateElement(ctrl, locale, includeReadOnly)) {
+        valid = false
+        if (!errorCtrl) {
+          errorCtrl = ctrl
+        }
+      } else {
+        removeError(ctrl)
+      }
+    }
+  }
+  if (!focusFirst) {
+    focusFirst = true
+  }
+  if (errorCtrl !== null && focusFirst === true) {
+    errorCtrl.focus()
+    if (scroll === true) {
+      errorCtrl.scrollIntoView()
+    }
+  }
+  return valid
+}
+function validateElements(elements: HTMLInputElement[], locale?: Locale | string | null): boolean {
+  let valid = true
+  let errorCtrl: HTMLInputElement | null = null
+  for (const c of elements) {
+    if (!validateElement(c, locale)) {
+      valid = false
+      if (!errorCtrl) {
+        errorCtrl = c
+      }
+    } else {
+      removeError(c)
+    }
+  }
+  if (errorCtrl !== null) {
+    errorCtrl.focus()
+    errorCtrl.scrollIntoView()
+  }
+  return valid
 }

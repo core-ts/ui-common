@@ -25,8 +25,15 @@ class resources {
   static url = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/
   static digit = /^\d+$/
   static amount = /^[0-9]{0,15}(?:\.[0-9]{1,3})?$/ // const regExp = /\d+\.\d+/;
+  static digitAndDash = /^[0-9-]*$/
+  static digitAndChar = /^\w*\d*$/
+  static checkNumber = /^\d{0,8}$/
   static percentage = /^[1-9][0-9]?$|^100$/
   static ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/
+  static usPostcode = /(^\d{5}$)|(^\d{5}-\d{4}$)/
+  static caPostcode =
+    /^[ABCEGHJKLMNPRSTVXYabceghjklmnprstvxy][0-9][ABCEGHJKLMNPRSTVWXYZabceghjklmnprstvwxyz][ -]?[0-9][ABCEGHJKLMNPRSTVWXYZabceghjklmnprstvwxyz][0-9]$/
+
   static ipv6 =
     /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
 }
@@ -75,7 +82,7 @@ function trimNull(obj: any): any {
   const keys = Object.keys(obj)
   for (const key of keys) {
     const v = obj[key]
-    if (v == null) {
+    if (v === null) {
       delete obj[key]
     } else if (Array.isArray(v) && v.length > 0) {
       const v1 = v[0]
@@ -623,6 +630,10 @@ function saveFormData(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
   const form = target.form as HTMLFormElement
+  const valid = validateForm(form)
+  if (!valid) {
+    return
+  }
   const formData = new FormData(form)
   let confirmText = target.getAttribute("data-message")
   if (!confirmText) {
@@ -665,6 +676,10 @@ function save(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
   const form = target.form as HTMLFormElement
+  const valid = validateForm(form)
+  if (!valid) {
+    return
+  }
   const contact = decodeFromForm(form)
   const url = getCurrentURL()
   showLoading()
@@ -676,17 +691,19 @@ function save(e: Event) {
     body: JSON.stringify(contact), // Convert the form data to JSON format
   })
     .then((response) => {
+      console.log("status code " + response.status)
       if (response.ok) {
-        response.text().then((data) => {
-          console.log("Success:", data)
-          hideLoading()
-          alert("Data submitted successfully!")
-        })
       } else {
-        console.error("Error:", response.statusText)
-        hideLoading()
-        alert("Failed to submit data.")
+        if (response.status >= 400 && response.status < 500) {
+          response.json().then((errors) => {
+            showFormError(form, errors)
+          })
+        } else {
+          console.error("Error:", response.statusText)
+          alert("Failed to submit data.")
+        }
       }
+      hideLoading()
     })
     .catch((err) => {
       console.log("Error: " + err)

@@ -2,7 +2,7 @@ function findParentNode(e: HTMLElement | null | undefined, nodeName: string): HT
   if (!e) {
     return null
   }
-  if (e.nodeName == nodeName) {
+  if (e.nodeName == nodeName || e.getAttribute("data-field")) {
     return e
   }
   let p: HTMLElement | null = e
@@ -11,7 +11,7 @@ function findParentNode(e: HTMLElement | null | undefined, nodeName: string): HT
     if (!p) {
       return null
     }
-    if (p.nodeName == nodeName) {
+    if (p.nodeName == nodeName || p.getAttribute("data-field")) {
       return p
     }
   }
