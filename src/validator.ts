@@ -561,7 +561,7 @@ function isCommaSeparator(locale?: Locale | null | string) {
   }
   return typeof locale === "string" ? locale !== "." : locale.decimalSeparator !== "."
 }
-function correctNumber(v: string, locale?: Locale | null | string): string {
+function correctNumber(v: string, locale?: Locale | null | string, keepFormat?: boolean): string {
   const l = v.length
   if (l === 0) {
     return v
@@ -574,33 +574,39 @@ function correctNumber(v: string, locale?: Locale | null | string): string {
   if (l === 1) {
     return arr.join("")
   }
+  let decimalSeparator = "."
   if (isCommaSeparator(locale)) {
+    decimalSeparator = ","
     v = v.replace(resources.num2, "")
   } else {
     v = v.replace(resources.num1, "")
   }
   for (i = 1; i < l; i++) {
-    if ((v[i] >= "0" && v[i] <= "9") || v[i] == "." || v[i] == ",") {
+    if ((v[i] >= "0" && v[i] <= "9") || v[i] == decimalSeparator) {
       arr.push(v[i])
     }
   }
-  return arr.join("")
+  let r = arr.join("")
+  if (keepFormat) {
+    return r
+  }
+  if (r.indexOf(",") >= 0) {
+    r = r.replace(",", ".")
+  }
+  return r
 }
 
-function handleNumberFocus(ele: HTMLInputElement, v: string, locale?: Locale | null | string): void {
-  v = correctNumber(v, locale)
-  if (v !== ele.value) {
-    ele.value = v
-  }
-}
-function numberOnFocus(event: Event, locale?: Locale): void {
+function numberOnFocus(event: Event): void {
   const ele = event.currentTarget as HTMLInputElement
   handleMaterialFocus(ele)
   if (ele.readOnly || ele.disabled || ele.value.length === 0) {
     return
   } else {
-    const v = ele.value
-    handleNumberFocus(ele, v, locale)
+    const decimalSeparator = getDecimalSeparator(ele)
+    const v = correctNumber(ele.value, decimalSeparator, true)
+    if (v !== ele.value) {
+      ele.value = v
+    }
   }
 }
 function validateMinMax(ele: HTMLInputElement, n: number, label: string, resource: StringMap, locale?: Locale | null | string): boolean {
@@ -682,16 +688,6 @@ function checkNumber(target: HTMLInputElement, locale?: Locale | string | null, 
     return value
   }
   return true
-}
-function getDecimalSeparator(ele: HTMLInputElement): string | null {
-  const decimalSeparator = ele.getAttribute("data-decimal-separator")
-  if (!decimalSeparator) {
-    const form = ele.form
-    if (form) {
-      return form.getAttribute("data-decimal-separator")
-    }
-  }
-  return decimalSeparator
 }
 function checkNumberOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement

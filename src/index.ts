@@ -100,6 +100,16 @@ function trimNull(obj: any): any {
 function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
+function getDecimalSeparator(ele: HTMLInputElement): string {
+  let decimalSeparator = ele.getAttribute("data-decimal-separator")
+  if (!decimalSeparator) {
+    const form = ele.form
+    if (form) {
+      decimalSeparator = form.getAttribute("data-decimal-separator")
+    }
+  }
+  return decimalSeparator === "," ? "," : "."
+}
 //detect Ctrl + [a, v, c, x]
 function detectCtrlKeyCombination(e: KeyboardEvent) {
   // list all CTRL + key combinations
@@ -183,8 +193,8 @@ function numberOnKeyPress(e: KeyboardEvent) {
     }
     return key
   }
-  if (keychar == ".") {
-    if (ctrl.value.indexOf(".") >= 0) {
+  if (keychar == "." || keychar == ",") {
+    if (ctrl.value.indexOf(keychar) >= 0 || keychar !== getDecimalSeparator(ctrl)) {
       return false
     }
     return key
