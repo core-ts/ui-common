@@ -7,8 +7,8 @@ interface Phones {
 // tslint:disable-next-line:class-name
 class resources {
   static defaultLimit = 12
-  static rightText?: string
-  static leftText?: string
+  // static rightText?: string
+  // static leftText?: string
   static confirmHeader?: string = "Confirm"
   static errorHeader?: string = "Error"
   static warningHeader?: string = "Warning"
@@ -166,10 +166,10 @@ function integerOnKeyPress(e: KeyboardEvent) {
   if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
     return key
   }
-  var ctrl = e.target as HTMLInputElement
+  var ele = e.target as HTMLInputElement
   var keychar = String.fromCharCode(key)
   if (keychar == "-") {
-    if (ctrl.value.indexOf("-") >= 0 || isNaN(ctrl.min as any) || parseInt(ctrl.min) >= 0) {
+    if (ele.value.indexOf("-") >= 0 || isNaN(ele.min as any) || parseInt(ele.min) >= 0) {
       return false
     }
     return key
@@ -185,16 +185,16 @@ function numberOnKeyPress(e: KeyboardEvent) {
   if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
     return key
   }
-  var ctrl = e.target as HTMLInputElement
+  var ele = e.target as HTMLInputElement
   var keychar = String.fromCharCode(key)
   if (keychar == "-") {
-    if (ctrl.value.indexOf("-") >= 0 || isNaN(ctrl.min as any) || parseInt(ctrl.min) >= 0) {
+    if (ele.value.indexOf("-") >= 0 || isNaN(ele.min as any) || parseInt(ele.min) >= 0) {
       return false
     }
     return key
   }
   if (keychar == "." || keychar == ",") {
-    if (ctrl.value.indexOf(keychar) >= 0 || keychar !== getDecimalSeparator(ctrl)) {
+    if (ele.value.indexOf(keychar) >= 0 || keychar !== getDecimalSeparator(ele)) {
       return false
     }
     return key
@@ -739,6 +739,7 @@ function changePage(e: Event) {
   if (search.length > 0) {
     newUrl = newUrl + "?" + search
   }
+  const resource = getResource()
   fetch(url, { method: "GET" })
     .then((response) => {
       if (response.ok) {
@@ -755,12 +756,12 @@ function changePage(e: Event) {
         })
       } else {
         console.error("Error:", response.statusText)
-        alert("Failed to submit data.")
+        alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
       }
     })
     .catch((err) => {
       console.log("Error: " + err)
-      alert("An error occurred while submitting the form")
+      alertError(resource.error_submitting_form, undefined, undefined, err)
     })
 }
 
@@ -780,6 +781,7 @@ function search(e: Event) {
       newUrl = newUrl + "?" + s
     }
   }
+  const resource = getResource()
   fetch(url, {
     method: "GET",
   })
@@ -798,12 +800,12 @@ function search(e: Event) {
         })
       } else {
         console.error("Error:", response.statusText)
-        alert("Failed to submit data.")
+        alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
       }
     })
     .catch((err) => {
       console.log("Error: " + err)
-      alert("An error occurred while submitting the form")
+      alertError(resource.error_submitting_form, undefined, undefined, err)
     })
 }
 function submitFormData(e: Event) {

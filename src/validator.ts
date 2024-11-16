@@ -978,16 +978,16 @@ function isValidForm(form: HTMLFormElement, focusFirst?: boolean, scroll?: boole
   let i = 0
   const len = form.length
   for (i = 0; i < len; i++) {
-    const ctrl = form[i] as HTMLInputElement
-    const parent = ctrl.parentElement
-    if (ctrl.classList.contains("invalid") || ctrl.classList.contains("ng-invalid") || (parent && parent.classList.contains("invalid"))) {
+    const ele = form[i] as HTMLInputElement
+    const parent = ele.parentElement
+    if (ele.classList.contains("invalid") || ele.classList.contains("ng-invalid") || (parent && parent.classList.contains("invalid"))) {
       if (focusFirst !== false && !focusFirst) {
         focusFirst = true
       }
-      if (ctrl && focusFirst) {
-        ctrl.focus()
+      if (ele && focusFirst) {
+        ele.focus()
         if (scroll) {
-          ctrl.scrollIntoView()
+          ele.scrollIntoView()
         }
       }
       return false
@@ -1004,21 +1004,21 @@ function validateForm(form?: HTMLFormElement, locale?: Locale | string | null, f
   let i = 0
   const len = form.length
   for (i = 0; i < len; i++) {
-    const ctrl = form[i] as HTMLInputElement
-    let type = ctrl.getAttribute("type")
+    const ele = form[i] as HTMLInputElement
+    let type = ele.getAttribute("type")
     if (type != null) {
       type = type.toLowerCase()
     }
     if (type === "checkbox" || type === "radio" || type === "submit" || type === "button" || type === "reset") {
       continue
     } else {
-      if (!validateElement(ctrl, locale, includeReadOnly)) {
+      if (!validateElement(ele, locale, includeReadOnly)) {
         valid = false
         if (!errorCtrl) {
-          errorCtrl = ctrl
+          errorCtrl = ele
         }
       } else {
-        removeError(ctrl)
+        removeError(ele)
       }
     }
   }

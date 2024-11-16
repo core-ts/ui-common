@@ -1,3 +1,76 @@
+const sysNo = document.getElementById("sysNo")
+if (sysNo) {
+  sysNo.addEventListener("click", function () {
+    const sysAlert = document.getElementById("sysAlert")
+    if (sysAlert) {
+      sysAlert.style.display = "none"
+    }
+
+    if ((window as any).fnoOnClick) {
+      ;(window as any).fnoOnClick()
+    }
+    const input = (sysYes as any)["activeElement"]
+    if (input) {
+      try {
+        input.focus()
+      } catch (err) {}
+    }
+    ;(sysYes as any)["activeElement"] = undefined
+  })
+}
+
+const sysYes = document.getElementById("sysYes")
+if (sysYes) {
+  sysYes.addEventListener("click", function () {
+    const sysAlert = document.getElementById("sysAlert")
+    if (sysAlert) {
+      sysAlert.style.display = "none"
+    }
+    if ((window as any).fyesOnClick) {
+      ;(window as any).fyesOnClick()
+    }
+    const input = (sysYes as any)["activeElement"]
+    if (input) {
+      try {
+        input.focus()
+      } catch (err) {}
+    }
+    ;(sysYes as any)["activeElement"] = undefined
+  })
+}
+
+var yesOnClick = function () {
+  const sysAlert = document.getElementById("sysAlert")
+  if (sysAlert) {
+    sysAlert.style.display = "none"
+  }
+  if ((window as any).fyesOnClick) {
+    ;(window as any).fyesOnClick()
+  }
+  const input = (sysYes as any)["activeElement"]
+  if (input) {
+    try {
+      input.focus()
+    } catch (err) {}
+  }
+  ;(sysYes as any)["activeElement"] = undefined
+}
+var noOnClick = function () {
+  const sysAlert = document.getElementById("sysAlert")
+  if (sysAlert) {
+    sysAlert.style.display = "none"
+  }
+  if ((window as any).fnoOnClick) {
+    ;(window as any).fnoOnClick()
+  }
+  const input = (sysYes as any)["activeElement"]
+  if (input) {
+    try {
+      input.focus()
+    } catch (err) {}
+  }
+  ;(sysYes as any)["activeElement"] = undefined
+}
 function fadeIn(ele: HTMLElement, display?: string): void {
   ele.style.opacity = "0"
   ele.style.display = display || "block"
@@ -46,7 +119,7 @@ function hideLoading() {
 }
 type Type = "Confirm" | "Alert"
 type IconType = "Error" | "Warning" | "Confirm" | "Success" | "Info" | "Alert"
-function escapeHTML(text?: string): string {
+function escapeHTML(text?: string | null): string {
   if (!text) {
     return ""
   }
@@ -75,8 +148,8 @@ function showAlert(
   header?: string,
   type?: Type,
   iconType?: IconType,
-  btnLeftText?: string,
-  btnRightText?: string,
+  btnLeftText?: string | null,
+  btnRightText?: string | null,
   yesCallback?: () => void,
   noCallback?: () => void,
   detail?: string,
@@ -90,14 +163,14 @@ function showAlert(
   const sysYes = document.getElementById("sysYes") as HTMLElement
   const sysNo = document.getElementById("sysNo") as HTMLElement
 
-  btnLeftText = btnLeftText !== undefined ? btnLeftText : resources.leftText
-  btnRightText = btnRightText !== undefined ? btnRightText : resources.rightText
-
   if (type === "Alert") {
+    btnRightText = btnRightText !== undefined ? btnRightText : sysYes.getAttribute("data-ok")
     if (!sysAlert.classList.contains("alert-only")) {
       sysAlert.classList.add("alert-only")
     }
   } else {
+    btnLeftText = btnLeftText ? btnLeftText : sysNo.getAttribute("data-text")
+    btnRightText = btnRightText !== undefined ? btnRightText : sysYes.getAttribute("data-text")
     sysAlert.classList.remove("alert-only")
   }
   if (sysErrorDetail && sysErrorDetailCaret && sysErrorDetailText) {
@@ -149,10 +222,8 @@ function showAlert(
   sysYes.focus()
 }
 function showConfirm(msg: string, yesCallback?: () => void, header?: string, btnLeftText?: string, btnRightText?: string, noCallback?: () => void): void {
-  const l = btnLeftText ? btnLeftText : resources.leftText
-  const r = btnRightText ? btnRightText : resources.rightText
   const h = header ? header : resources.confirmHeader
-  showAlert(msg, h, "Confirm", "Confirm", l, r, yesCallback, noCallback)
+  showAlert(msg, h, "Confirm", "Confirm", btnLeftText, btnRightText, yesCallback, noCallback)
 }
 function alertError(msg: string, callback?: () => void, header?: string, detail?: string): void {
   const h = header ? header : resources.errorHeader
