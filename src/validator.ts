@@ -69,10 +69,10 @@ function showFormError(form?: HTMLFormElement, errors?: ErrorMessage[], focusFir
       }
     }
   }
-  if (!focusFirst) {
+  if (focusFirst !== false) {
     focusFirst = true
   }
-  if (errorCtrl !== null && focusFirst === true) {
+  if (errorCtrl && focusFirst === true) {
     errorCtrl.focus()
     errorCtrl.scrollIntoView()
   }
@@ -380,6 +380,7 @@ function validOnBlur(event: Event): void {
   if (!ele || ele.readOnly || ele.disabled) {
     return
   }
+  materialOnBlur(event)
   removeError(ele)
 }
 function requiredOnBlur(event: Event): void {
@@ -387,11 +388,11 @@ function requiredOnBlur(event: Event): void {
   if (!ele || ele.readOnly || ele.disabled) {
     return
   }
+  materialOnBlur(event)
+  removeError(ele)
   setTimeout(() => {
     ele.value = ele.value.trim()
-    if (!checkRequired(ele)) {
-      removeError(ele)
-    }
+    checkRequired(ele)
   }, 40)
 }
 function checkOnBlur(event: Event, key: string, check: (v: string | null | undefined) => boolean, formatF?: (m0: string) => string): void {
@@ -399,6 +400,7 @@ function checkOnBlur(event: Event, key: string, check: (v: string | null | undef
   if (!ele || ele.readOnly || ele.disabled) {
     return
   }
+  materialOnBlur(event)
   removeError(ele)
   setTimeout(() => {
     ele.value = ele.value.trim()
@@ -440,9 +442,10 @@ function patternOnBlur(event: Event): void {
   if (!ele || ele.readOnly || ele.disabled) {
     return
   }
-  ele.value = ele.value.trim()
+  materialOnBlur(event)
   removeError(ele)
   setTimeout(() => {
+    ele.value = ele.value.trim()
     if (checkRequired(ele)) {
       return
     }
@@ -460,7 +463,7 @@ function patternOnBlur(event: Event): void {
   }, 40)
 }
 
-function dateOnBlur(event: Event) {
+function dateOnBlur(event: Event, dateOnly?: boolean) {
   const target = event.currentTarget as HTMLInputElement
   if (!target || target.readOnly || target.disabled) {
     return true
@@ -469,9 +472,9 @@ function dateOnBlur(event: Event) {
   removeError(target)
   const label = getLabel(target)
   const resource = getResource()
-  checkDate(target, label, resource)
+  checkDate(target, label, resource, dateOnly)
 }
-function checkDate(ele: HTMLInputElement, label: string, resource: StringMap): boolean {
+function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, dateOnly?: boolean): boolean {
   const v = new Date(ele.value)
   if (isNaN(v.getTime())) {
     const msg = format(resource["error_date"], label)
@@ -498,7 +501,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap): b
       } else {
         const d = new Date(ele.min)
         if (!isNaN(d.getTime())) {
-          const v2 = formatLongDateTime(d, "YYYY-MM-DD")
+          const v2 = dateOnly ? formatDate(d, "YYYY-MM-DD") : formatLongDateTime(d, "YYYY-MM-DD")
           let msg = format(resource["error_from"], label, v2)
           addErrorMessage(ele, msg)
           return false
@@ -525,7 +528,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap): b
       } else {
         const d = new Date(ele.max)
         if (!isNaN(d.getTime())) {
-          const v2 = formatLongDateTime(d, "YYYY-MM-DD")
+          const v2 = dateOnly ? formatDate(d, "YYYY-MM-DD") : formatLongDateTime(d, "YYYY-MM-DD")
           let msg = format(resource["error_after"], label, v2)
           addErrorMessage(ele, msg)
           return false
@@ -563,13 +566,20 @@ function correctNumber(v: string, locale?: Locale | null | string): string {
   if (l === 0) {
     return v
   }
+  const arr: string[] = []
+  let i = 0
+  if ((v[i] >= "0" && v[i] <= "9") || v[i] === "-") {
+    arr.push(v[i])
+  }
+  if (l === 1) {
+    return arr.join("")
+  }
   if (isCommaSeparator(locale)) {
     v = v.replace(resources.num2, "")
   } else {
     v = v.replace(resources.num1, "")
   }
-  const arr: string[] = []
-  for (let i = 0; i < l; i++) {
+  for (i = 1; i < l; i++) {
     if ((v[i] >= "0" && v[i] <= "9") || v[i] == "." || v[i] == ",") {
       arr.push(v[i])
     }
@@ -763,6 +773,12 @@ function formatNumber(v: number, scale?: number, d?: string | null, g?: string):
 }
 
 function validateOnBlur(event: Event, includeReadOnly?: boolean): void {
+  const target = event.target as HTMLInputElement
+  if (!target || (target.readOnly && includeReadOnly === false) || target.disabled || target.hidden || target.style.display === "none") {
+    return
+  }
+  materialOnBlur(event)
+  removeError(target)
   validateElement(event.target as HTMLInputElement, undefined, includeReadOnly)
 }
 function validateElement(ele: HTMLInputElement, locale?: Locale | string | null, includeReadOnly?: boolean): boolean {
@@ -858,8 +874,8 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
         ele.value = formatNumber(n, scale, decimalSeparator)
       }
     }
-  } else if (ctype === "date" || ctype === "datetime-local") {
-    const valid = checkDate(ele, label, resource)
+  } else if (ctype === "date" || ctype === "datetime-local" || ctype === "datetime") {
+    const valid = checkDate(ele, label, resource, ctype === "date")
     if (!valid) {
       return false
     }
@@ -921,7 +937,7 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
       return false
     }
   } else if (datatype === "post-code") {
-    let countryCode = ele.getAttribute("country-code")
+    let countryCode = ele.getAttribute("data-country-code")
     if (countryCode) {
       countryCode = countryCode.toUpperCase()
       if (countryCode === "US" || countryCode === "USA") {

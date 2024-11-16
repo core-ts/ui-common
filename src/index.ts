@@ -46,7 +46,7 @@ interface Locale {
   currencyPattern: number
 }
 
-function parseDate(v: string, format?: string): Date | null | undefined {
+function parseDate(v: string, format?: string): Date {
   if (!format || format.length === 0) {
     format = "MM/DD/YYYY"
   } else {
@@ -101,7 +101,7 @@ function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
 //detect Ctrl + [a, v, c, x]
-function detectCtrlKeyCombination(e: any) {
+function detectCtrlKeyCombination(e: KeyboardEvent) {
   // list all CTRL + key combinations
   var forbiddenKeys = new Array("v", "a", "x", "c")
   var key
@@ -136,66 +136,58 @@ function detectCtrlKeyCombination(e: any) {
   }
   return false
 }
-function digitOnKeyPress(e: Event) {
+function digitOnKeyPress(e: KeyboardEvent) {
   if (detectCtrlKeyCombination(e)) {
     return true
   }
   const key = window.event ? (e as any).keyCode : (e as any).which
+  if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
+    return key
+  }
   var keychar = String.fromCharCode(key)
-  if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t" || keychar == "-") {
+  var reg = /\d/
+  return reg.test(keychar)
+}
+function integerOnKeyPress(e: KeyboardEvent) {
+  if (detectCtrlKeyCombination(e)) {
+    return true
+  }
+  const key = window.event ? (e as any).keyCode : (e as any).which
+  if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
+    return key
+  }
+  var ctrl = e.target as HTMLInputElement
+  var keychar = String.fromCharCode(key)
+  if (keychar == "-") {
+    if (ctrl.value.indexOf("-") >= 0 || isNaN(ctrl.min as any) || parseInt(ctrl.min) >= 0) {
+      return false
+    }
     return key
   }
   var reg = /\d/
   return reg.test(keychar)
 }
-function integerOnKeyPress(e: Event) {
+function numberOnKeyPress(e: KeyboardEvent) {
   if (detectCtrlKeyCombination(e)) {
     return true
   }
   const key = window.event ? (e as any).keyCode : (e as any).which
+  if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
+    return key
+  }
   var ctrl = e.target as HTMLInputElement
   var keychar = String.fromCharCode(key)
-  let min: number | undefined
-  if (!isNaN(ctrl.min as any)) {
-    min = parseInt(ctrl.min)
-  }
-  if (min && min >= 0) {
-    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
-      return key
+  if (keychar == "-") {
+    if (ctrl.value.indexOf("-") >= 0 || isNaN(ctrl.min as any) || parseInt(ctrl.min) >= 0) {
+      return false
     }
-  } else {
-    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t" || keychar == "-") {
-      return key
-    }
-  }
-  var reg = /\d/
-  return reg.test(keychar)
-}
-function numberOnKeyPress(e: Event) {
-  if (detectCtrlKeyCombination(e)) {
-    return true
-  }
-  const key = window.event ? (e as any).keyCode : (e as any).which
-  const keychar = String.fromCharCode(key)
-  const ctrl = e.target as HTMLInputElement
-  let min: number | undefined
-  if (!isNaN(ctrl.min as any)) {
-    min = parseInt(ctrl.min)
-  }
-  if (min && min >= 0) {
-    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t") {
-      return key
-    }
-  } else {
-    if (key == 13 || key == 8 || key == 9 || key == 11 || key == 127 || key == "\t" || keychar == "-") {
-      return key
-    }
+    return key
   }
   if (keychar == ".") {
-    var str = ctrl.value
-    if (str != "" && str.indexOf(".") < 0) {
-      return key
+    if (ctrl.value.indexOf(".") >= 0) {
+      return false
     }
+    return key
   }
   var reg = /\d/
   return reg.test(keychar)
@@ -396,7 +388,7 @@ function materialOnBlur(event: Event): void {
   const ele = event.currentTarget as HTMLInputElement
   setTimeout(() => {
     if (ele.nodeName === "INPUT" || ele.nodeName === "SELECT" || ele.nodeName === "TEXTAREA") {
-      addClasses(getContainer(ele), ["focused", "focus"])
+      removeClasses(getContainer(ele), ["focused", "focus"])
     }
   }, 0)
 }
@@ -404,7 +396,7 @@ function registerEvents(form: HTMLFormElement): void {
   const len = form.length
   for (let i = 0; i < len; i++) {
     const ele = form[i] as HTMLInputElement
-    if (ele.nodeName === "INPUT" || ele.nodeName === "SELECT") {
+    if (ele.nodeName === "INPUT" || ele.nodeName === "SELECT" || ele.nodeName === "TEXTAREA") {
       let type = ele.getAttribute("type")
       if (type != null) {
         type = type.toLowerCase()
@@ -443,13 +435,6 @@ function registerEvents(form: HTMLFormElement): void {
         } else {
           console.log("name:" + ele.getAttribute("name"))
         }
-      }
-    } else if (ele.nodeName === "TEXTAREA") {
-      if (ele.getAttribute("blur") === null) {
-        ;(ele as any).blur = materialOnBlur
-      }
-      if (ele.getAttribute("focus") === null) {
-        ;(ele as any).focus = materialOnFocus
       }
     }
   }
@@ -505,8 +490,8 @@ function setKey(_object: any, _isArrayKey: boolean, _key: string, _nextValue: an
   return _object
 }
 
-function decodeFromForm<T>(form: HTMLFormElement, locale?: Locale, currencySymbol?: string | null): T {
-  const dateFormat = form.getAttribute("date-format")
+function decodeFromForm<T>(form: HTMLFormElement, currencySymbol?: string | null): T {
+  const dateFormat = form.getAttribute("data-date-format")
   const obj = {} as T
   const len = form.length
   for (let i = 0; i < len; i++) {
@@ -524,6 +509,9 @@ function decodeFromForm<T>(form: HTMLFormElement, locale?: Locale, currencySymbo
         isDate = true
         name = dataField
       }
+    }
+    if (isDate === false && ele.getAttribute("data-type") === "date") {
+      isDate = true
     }
     if (name != null && name !== "") {
       let nodeName = ele.nodeName
@@ -561,15 +549,7 @@ function decodeFromForm<T>(form: HTMLFormElement, locale?: Locale, currencySymbo
             }
             break
           case "date":
-            if (ele.value.length === 10) {
-              try {
-                val = new Date(ele.value) // DateUtil.parse(ele.value, 'YYYY-MM-DD');
-              } catch (err) {
-                val = null
-              }
-            } else {
-              val = null
-            }
+            val = ele.value.length === 10 ? ele.value : null
             break
           case "datetime-local":
             if (ele.value.length > 0) {
@@ -586,17 +566,14 @@ function decodeFromForm<T>(form: HTMLFormElement, locale?: Locale, currencySymbo
             val = ele.value
         }
         if (isDate && dateFormat && dateFormat.length > 0) {
-          try {
-            val = parseDate(val, dateFormat) // moment(val, dateFormat).toDate();
-          } catch (err) {
-            val = null
-          }
+          const d = parseDate(val, dateFormat)
+          val = d.toString() === "Invalid Date" ? null : d
         }
-        const ctype = ele.getAttribute("data-type")
+        const datatype = ele.getAttribute("data-type")
         let v: any = ele.value
         let symbol: string | null | undefined
-        if (ctype === "currency") {
-          symbol = ele.getAttribute("currency-symbol")
+        if (datatype === "currency" || datatype === "string-currency") {
+          symbol = ele.getAttribute("data-currency-symbol")
           if (!symbol) {
             symbol = currencySymbol
           }
@@ -604,12 +581,9 @@ function decodeFromForm<T>(form: HTMLFormElement, locale?: Locale, currencySymbo
             v = v.replace(symbol, "")
           }
         }
-        if (type === "number" || ctype === "currency" || ctype === "int" || ctype === "number") {
-          if (locale && locale.decimalSeparator !== ".") {
-            v = v.replace(r2, "")
-          } else {
-            v = v.replace(r1, "")
-          }
+        if (type === "number" || datatype === "currency" || datatype === "integer" || datatype === "number") {
+          const decimalSeparator = getDecimalSeparator(ele)
+          v = decimalSeparator === "," ? v.replace(r2, "") : (v = v.replace(r1, ""))
           val = isNaN(v) ? null : parseFloat(v)
         }
         setValue(obj, name, val) // obj[name] = val;
@@ -822,7 +796,7 @@ function search(e: Event) {
       alert("An error occurred while submitting the form")
     })
 }
-function saveFormData(e: Event) {
+function submitFormData(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
   const form = target.form as HTMLFormElement
@@ -830,14 +804,16 @@ function saveFormData(e: Event) {
   if (!valid) {
     return
   }
-  const formData = new FormData(form)
+  const resource = getResource()
+  let successText = target.getAttribute("data-success")
   let confirmText = target.getAttribute("data-message")
   if (!confirmText) {
-    confirmText = "Are you sure you want to save?"
+    confirmText = resource.msg_confirm_save
   }
   showConfirm(confirmText, () => {
-    const url = getCurrentURL()
     showLoading()
+    const url = getCurrentURL()
+    const formData = new FormData(form)
     fetch(url, {
       method: "POST",
       body: formData,
@@ -854,21 +830,24 @@ function saveFormData(e: Event) {
               }
             }
             hideLoading()
+            if (successText) {
+              alertSuccess(successText)
+            }
           })
         } else {
-          console.error("Error:", response.statusText)
           hideLoading()
-          alert("Failed to submit data.")
+          console.error("Error:", response.statusText)
+          alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
         }
       })
       .catch((err) => {
-        console.log("Error: " + err)
         hideLoading()
-        alert("An error occurred while submitting the form")
+        console.log("Error: " + err)
+        alertError(resource.error_submitting_form, undefined, undefined, err)
       })
   })
 }
-function save(e: Event) {
+function submit(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
   const form = target.form as HTMLFormElement
@@ -876,34 +855,49 @@ function save(e: Event) {
   if (!valid) {
     return
   }
-  const contact = decodeFromForm(form)
-  const url = getCurrentURL()
-  showLoading()
-  fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json", // Ensure the server understands the content type
-    },
-    body: JSON.stringify(contact), // Convert the form data to JSON format
-  })
-    .then((response) => {
-      console.log("status code " + response.status)
-      if (response.ok) {
-      } else {
-        if (response.status >= 400 && response.status < 500) {
-          response.json().then((errors) => {
-            showFormError(form, errors)
-          })
+  const resource = getResource()
+  let confirmText = target.getAttribute("data-message")
+  if (!confirmText) {
+    confirmText = resource.msg_confirm_save
+  }
+  showConfirm(confirmText, () => {
+    showLoading()
+    const data = decodeFromForm(form)
+    const url = getCurrentURL()
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json", // Ensure the server understands the content type
+      },
+      body: JSON.stringify(data), // Convert the form data to JSON format
+    })
+      .then((response) => {
+        console.log("status code " + response.status)
+        if (response.ok) {
+          let successText = target.getAttribute("data-success")
+          if (!successText) {
+            successText = resource.msg_save_success
+          }
+          alertSuccess(successText)
         } else {
-          console.error("Error:", response.statusText)
-          alert("Failed to submit data.")
+          if (response.status === 422) {
+            response.json().then((errors) => {
+              showFormError(form, errors)
+            })
+          } else if (response.status === 409) {
+            alertError(resource.error_409)
+          } else if (response.status === 400) {
+            alertError(resource.error_400, undefined, undefined, response.statusText)
+          } else {
+            alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+          }
         }
-      }
-      hideLoading()
-    })
-    .catch((err) => {
-      console.log("Error: " + err)
-      hideLoading()
-      alert("An error occurred while submitting the form")
-    })
+        hideLoading()
+      })
+      .catch((err) => {
+        hideLoading()
+        console.log("Error: " + err)
+        alertError(resource.error_submitting_form, undefined, undefined, err)
+      })
+  })
 }
