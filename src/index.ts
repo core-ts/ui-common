@@ -437,13 +437,9 @@ function registerEvents(form: HTMLFormElement): void {
         }
         if (ele.getAttribute("onblur") === null && ele.getAttribute("(blur)") === null) {
           ele.onblur = materialOnBlur
-        } else {
-          console.log("name:" + ele.getAttribute("name"))
         }
         if (ele.getAttribute("onfocus") === null && ele.getAttribute("(focus)") === null) {
           ele.onfocus = materialOnFocus
-        } else {
-          console.log("name:" + ele.getAttribute("name"))
         }
       }
     }
@@ -755,7 +751,7 @@ function changePage(e: Event) {
           window.history.pushState(undefined, "Title", newUrl)
         })
       } else {
-        console.error("Error:", response.statusText)
+        console.error("Error: ", response.statusText)
         alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
       }
     })
@@ -799,7 +795,7 @@ function search(e: Event) {
           window.history.pushState(undefined, "Title", newUrl)
         })
       } else {
-        console.error("Error:", response.statusText)
+        console.error("Error: ", response.statusText)
         alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
       }
     })
@@ -848,7 +844,7 @@ function submitFormData(e: Event) {
           })
         } else {
           hideLoading()
-          console.error("Error:", response.statusText)
+          console.error("Error: ", response.statusText)
           alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
         }
       })
@@ -859,7 +855,7 @@ function submitFormData(e: Event) {
       })
   })
 }
-function submit(e: Event) {
+function submitForm(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
   const form = target.form as HTMLFormElement
@@ -884,7 +880,6 @@ function submit(e: Event) {
       body: JSON.stringify(data), // Convert the form data to JSON format
     })
       .then((response) => {
-        console.log("status code " + response.status)
         if (response.ok) {
           let successText = target.getAttribute("data-success")
           if (!successText) {

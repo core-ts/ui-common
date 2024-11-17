@@ -125,6 +125,7 @@ function navigate(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLElement
   const link = findParentNode(target, "A") as HTMLLinkElement
+  const resource = getResource()
   if (link) {
     const url = link.href
     fetch(url + "?partial=true", { method: "GET" })
@@ -155,13 +156,13 @@ function navigate(e: Event) {
             }
           })
         } else {
-          console.error("Error:", response.statusText)
-          alert("Failed to submit data.")
+          console.error("Error: ", response.statusText)
+          alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
         }
       })
       .catch((err) => {
         console.log("Error: " + err)
-        alert("An error occurred while submitting the form")
+        alertError(resource.error_submitting_form, undefined, undefined, err)
       })
   }
 }
