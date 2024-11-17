@@ -574,15 +574,15 @@ function correctNumber(v: string, locale?: Locale | null | string, keepFormat?: 
   if (l === 1) {
     return arr.join("")
   }
-  let decimalSeparator = "."
+  let separator = "."
   if (isCommaSeparator(locale)) {
-    decimalSeparator = ","
+    separator = ","
     v = v.replace(resources.num2, "")
   } else {
     v = v.replace(resources.num1, "")
   }
   for (i = 1; i < l; i++) {
-    if ((v[i] >= "0" && v[i] <= "9") || v[i] == decimalSeparator) {
+    if ((v[i] >= "0" && v[i] <= "9") || v[i] == separator) {
       arr.push(v[i])
     }
   }
@@ -602,8 +602,8 @@ function numberOnFocus(event: Event): void {
   if (ele.readOnly || ele.disabled || ele.value.length === 0) {
     return
   } else {
-    const decimalSeparator = getDecimalSeparator(ele)
-    const v = correctNumber(ele.value, decimalSeparator, true)
+    const separator = getDecimalSeparator(ele)
+    const v = correctNumber(ele.value, separator, true)
     if (v !== ele.value) {
       ele.value = v
     }
@@ -691,32 +691,32 @@ function checkNumber(target: HTMLInputElement, locale?: Locale | string | null, 
 }
 function checkNumberOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement
-  const decimalSeparator = target.getAttribute("data-decimal-separator")
-  const v = checkNumberEvent(event, decimalSeparator)
+  const separator = target.getAttribute("data-decimal-separator")
+  const v = checkNumberEvent(event, separator)
   if (typeof v === "string") {
     target.value = v
   }
 }
 function numberOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement
-  const decimalSeparator = target.getAttribute("data-decimal-separator")
-  const v = checkNumberEvent(event, decimalSeparator)
+  const separator = target.getAttribute("data-decimal-separator")
+  const v = checkNumberEvent(event, separator)
   if (typeof v === "string") {
     const attr = target.getAttribute("data-scale")
     const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
     const n = parseFloat(v)
-    target.value = formatNumber(n, scale, decimalSeparator)
+    target.value = formatNumber(n, scale, separator)
   }
 }
 function currencyOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement
-  const decimalSeparator = target.getAttribute("data-decimal-separator")
-  const v = checkNumberEvent(event, decimalSeparator)
+  const separator = target.getAttribute("data-decimal-separator")
+  const v = checkNumberEvent(event, separator)
   if (typeof v === "string") {
     const attr = target.getAttribute("data-scale")
     const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
     const n = parseFloat(v)
-    const value = formatNumber(n, scale, decimalSeparator)
+    const value = formatNumber(n, scale, separator)
     target.value = formatCurrency(value, target)
   }
 }
@@ -859,7 +859,7 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
     }
   } else if (datatype === "number" || datatype === "integer" || datatype === "currency" || datatype === "string-currency" || datatype === "percentage") {
     const v = checkNumber(ele, locale, resource)
-    const decimalSeparator = getDecimalSeparator(ele)
+    const separator = getDecimalSeparator(ele)
     if (typeof v === "string") {
       const attr = ele.getAttribute("data-scale")
       const scale = attr && attr.length > 0 ? parseInt(attr, 10) : undefined
@@ -867,7 +867,7 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
       if (datatype === "currency" || datatype === "string-currency") {
         ele.value = formatCurrency(value, ele)
       } else {
-        ele.value = formatNumber(n, scale, decimalSeparator)
+        ele.value = formatNumber(n, scale, separator)
       }
     }
   } else if (ctype === "date" || ctype === "datetime-local" || ctype === "datetime") {

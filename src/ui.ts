@@ -106,16 +106,20 @@ function toast(msg: string): void {
 }
 function showLoading(isFirstTime?: boolean) {
   const sysLoading = document.getElementById("sysLoading") as HTMLElement
-  sysLoading.style.display = "block"
-  if (isFirstTime) {
-    sysLoading.classList.add("dark")
-  } else {
-    sysLoading.classList.remove("dark")
+  if (sysLoading) {
+    sysLoading.style.display = "block"
+    if (isFirstTime) {
+      sysLoading.classList.add("dark")
+    } else {
+      sysLoading.classList.remove("dark")
+    }
   }
 }
 function hideLoading() {
-  const loading = document.getElementById("sysLoading") as HTMLElement
-  loading.style.display = "none"
+  const sysLoading = document.getElementById("sysLoading") as HTMLElement
+  if (sysLoading) {
+    sysLoading.style.display = "none"
+  }
 }
 type Type = "Confirm" | "Alert"
 type IconType = "Error" | "Warning" | "Confirm" | "Success" | "Info" | "Alert"
@@ -145,7 +149,7 @@ function escapeHTML(text?: string | null): string {
 }
 function showAlert(
   msg: string,
-  header?: string,
+  header?: string | null,
   type?: Type,
   iconType?: IconType,
   btnLeftText?: string | null,
@@ -221,23 +225,28 @@ function showAlert(
   ;(window as any).fnoOnClick = noCallback
   sysYes.focus()
 }
+const sysMessageHeader = document.getElementById("sysMessageHeader") as HTMLElement
 function showConfirm(msg: string, yesCallback?: () => void, header?: string, btnLeftText?: string, btnRightText?: string, noCallback?: () => void): void {
-  const h = header ? header : resources.confirmHeader
+  const h = header ? header : sysMessageHeader.getAttribute("data-confirm")
   showAlert(msg, h, "Confirm", "Confirm", btnLeftText, btnRightText, yesCallback, noCallback)
 }
 function alertError(msg: string, callback?: () => void, header?: string, detail?: string): void {
-  const h = header ? header : resources.errorHeader
-  showAlert(msg, h, "Alert", "Error", "", "", callback, undefined, detail)
+  const h = header ? header : sysMessageHeader.getAttribute("data-error")
+  const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")
+  showAlert(msg, h, "Alert", "Error", "", buttonText, callback, undefined, detail)
 }
 function alertWarning(msg: string, callback?: () => void, header?: string): void {
-  const h = header ? header : resources.warningHeader
-  showAlert(msg, h, "Alert", "Warning", "", "", callback, undefined)
+  const h = header ? header : sysMessageHeader.getAttribute("data-warning")
+  const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")
+  showAlert(msg, h, "Alert", "Warning", "", buttonText, callback, undefined)
 }
 function alertInfo(msg: string, callback?: () => void, header?: string): void {
-  const h = header ? header : resources.infoHeader
-  showAlert(msg, h, "Alert", "Info", "", "", callback, undefined)
+  const h = header ? header : sysMessageHeader.getAttribute("data-info")
+  const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")
+  showAlert(msg, h, "Alert", "Info", "", buttonText, callback, undefined)
 }
 function alertSuccess(msg: string, callback?: () => void, header?: string): void {
-  const h = header ? header : resources.successHeader
-  showAlert(msg, h, "Alert", "Success", "", "", callback, undefined)
+  const h = header ? header : sysMessageHeader.getAttribute("data-success")
+  const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")
+  showAlert(msg, h, "Alert", "Success", "", buttonText, callback, undefined)
 }

@@ -7,13 +7,6 @@ interface Phones {
 // tslint:disable-next-line:class-name
 class resources {
   static defaultLimit = 12
-  // static rightText?: string
-  // static leftText?: string
-  static confirmHeader?: string = "Confirm"
-  static errorHeader?: string = "Error"
-  static warningHeader?: string = "Warning"
-  static infoHeader?: string = "Info"
-  static successHeader?: string = "Success"
   static containerClass = "form-input"
 
   static num1 = / |,|\$|€|£|¥|'|٬|،| /g
@@ -101,14 +94,14 @@ function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
 function getDecimalSeparator(ele: HTMLInputElement): string {
-  let decimalSeparator = ele.getAttribute("data-decimal-separator")
-  if (!decimalSeparator) {
+  let separator = ele.getAttribute("data-decimal-separator")
+  if (!separator) {
     const form = ele.form
     if (form) {
-      decimalSeparator = form.getAttribute("data-decimal-separator")
+      separator = form.getAttribute("data-decimal-separator")
     }
   }
-  return decimalSeparator === "," ? "," : "."
+  return separator === "," ? "," : "."
 }
 //detect Ctrl + [a, v, c, x]
 function detectCtrlKeyCombination(e: KeyboardEvent) {
