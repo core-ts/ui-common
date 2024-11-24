@@ -5,10 +5,6 @@ if (sysNo) {
     if (sysAlert) {
       sysAlert.style.display = "none"
     }
-
-    if ((window as any).fnoOnClick) {
-      ;(window as any).fnoOnClick()
-    }
     const input = (sysYes as any)["activeElement"]
     if (input) {
       try {
@@ -25,9 +21,6 @@ if (sysYes) {
     const sysAlert = document.getElementById("sysAlert")
     if (sysAlert) {
       sysAlert.style.display = "none"
-    }
-    if ((window as any).fyesOnClick) {
-      ;(window as any).fyesOnClick()
     }
     const input = (sysYes as any)["activeElement"]
     if (input) {
