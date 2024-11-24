@@ -1,4 +1,4 @@
-const sysNo = document.getElementById("sysNo")
+const sysNo = document.getElementById("sysNo") as HTMLElement
 if (sysNo) {
   sysNo.addEventListener("click", function () {
     const sysAlert = document.getElementById("sysAlert")
@@ -19,7 +19,7 @@ if (sysNo) {
   })
 }
 
-const sysYes = document.getElementById("sysYes")
+const sysYes = document.getElementById("sysYes") as HTMLElement
 if (sysYes) {
   sysYes.addEventListener("click", function () {
     const sysAlert = document.getElementById("sysAlert")
@@ -96,16 +96,17 @@ function fadeOut(ele: HTMLElement): void {
   })()
 }
 
+const sysToast = document.getElementById("sysToast") as HTMLElement
 function toast(msg: string): void {
-  const sysToast = document.getElementById("sysToast") as HTMLElement
   sysToast.innerHTML = msg
   fadeIn(sysToast)
   setTimeout(() => {
     fadeOut(sysToast)
   }, 1340)
 }
+
+const sysLoading = document.getElementById("sysLoading") as HTMLElement
 function showLoading(isFirstTime?: boolean) {
-  const sysLoading = document.getElementById("sysLoading") as HTMLElement
   if (sysLoading) {
     sysLoading.style.display = "block"
     if (isFirstTime) {
@@ -116,7 +117,6 @@ function showLoading(isFirstTime?: boolean) {
   }
 }
 function hideLoading() {
-  const sysLoading = document.getElementById("sysLoading") as HTMLElement
   if (sysLoading) {
     sysLoading.style.display = "none"
   }
@@ -164,8 +164,8 @@ function showAlert(
   const sysErrorDetail = document.getElementById("sysErrorDetail") as HTMLElement
   const sysErrorDetailText = document.getElementById("sysErrorDetailText") as HTMLElement
   const sysErrorDetailCaret = document.getElementById("sysErrorDetailCaret") as HTMLElement
-  const sysYes = document.getElementById("sysYes") as HTMLElement
-  const sysNo = document.getElementById("sysNo") as HTMLElement
+  // const sysYes = document.getElementById("sysYes") as HTMLElement
+  // const sysNo = document.getElementById("sysNo") as HTMLElement
 
   if (type === "Alert") {
     btnRightText = btnRightText !== undefined ? btnRightText : sysYes.getAttribute("data-ok")
