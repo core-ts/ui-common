@@ -868,7 +868,7 @@ function submitForm(e: Event) {
     fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json", // Ensure the server understands the content type
+        "Content-Type": "application/json;charset=utf-8", // Ensure the server understands the content type
       },
       body: JSON.stringify(data), // Convert the form data to JSON format
     })
