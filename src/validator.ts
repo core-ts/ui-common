@@ -352,7 +352,7 @@ function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string
   return false
 }
 function checkMaxLength(ele: HTMLInputElement, label?: string, r?: StringMap): boolean {
-  if (ele.value.length > ele.maxLength) {
+  if (ele.maxLength >= 0 && ele.value.length > ele.maxLength) {
     if (!label) {
       label = getLabel(ele)
     }
@@ -364,7 +364,7 @@ function checkMaxLength(ele: HTMLInputElement, label?: string, r?: StringMap): b
   return false
 }
 function checkMinLength(ele: HTMLInputElement, label?: string, r?: StringMap): boolean {
-  if (ele.value.length < ele.minLength) {
+  if (ele.minLength >= 0 && ele.value.length < ele.minLength) {
     if (!label) {
       label = getLabel(ele)
     }
