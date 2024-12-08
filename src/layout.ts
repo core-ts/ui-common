@@ -65,13 +65,20 @@ function toggleMenuItem(e: Event) {
     parent.classList.toggle("open")
   }
 }
-function removeTextOnClick(e: Event, name?: string) {
+function clearText(e: Event, name?: string) {
   const n = name && name.length > 0 ? name : "q"
   const btn = e.target as HTMLInputElement
   const q = getElement(btn.form, n) as HTMLInputElement
   if (q) {
     btn.hidden = true
     q.value = ""
+  }
+}
+function clearMessage(e: Event) {
+  const ele = e.target as HTMLInputElement
+  if (ele && ele.parentElement) {
+    removeClasses(ele.parentElement, ["alert-error", "alert-warning", "alert-info"])
+    ele.parentElement.innerText = ""
   }
 }
 function qOnChange(e: Event) {

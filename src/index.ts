@@ -535,18 +535,16 @@ function decodeFromForm<T>(form: HTMLFormElement, currencySymbol?: string | null
                 val = val.filter((item: string) => item != ele.value)
               }
             } else {
-              const c0 = ele.checked as any
-              if (c0 || c0 === "checked") {
-                val = true
-              }
+              val = ele.value.length > 0 ? ele.value : ele.checked
             }
-            break
+            setValue(obj, name, val)
+            continue
           case "radio":
-            const cv = ele.checked as any
-            if (cv || cv === "checked") {
-              val = ele.value
+            if (ele.checked) {
+              val = ele.value.length > 0 ? ele.value : ele.checked
+              setValue(obj, name, val)
             }
-            break
+            continue
           case "date":
             val = ele.value.length === 10 ? ele.value : null
             break
