@@ -9,6 +9,7 @@ class resources {
   static defaultLimit = 12
   static containerClass = "form-input"
   static hiddenMessage = "hidden-message"
+  static token = "token"
 
   static num1 = / |,|\$|€|£|¥|'|٬|،| /g
   static num2 = / |\.|\$|€|£|¥|'|٬|،| /g
@@ -292,7 +293,17 @@ function formatLongDateTime(date: Date | null | undefined, dateFormat?: string, 
   }
   return sd + " " + formatLongTime(date)
 }
-
+function getValue(form: HTMLFormElement | null | undefined, name: string): string | null {
+  if (form) {
+    for (let i = 0; i < form.length; i++) {
+      const ele = form[i] as HTMLInputElement
+      if (ele.name === name) {
+        return ele.value
+      }
+    }
+  }
+  return null
+}
 function getElement(form: HTMLFormElement | undefined | null, name: string): Element | null {
   if (form) {
     const l = form.length
@@ -728,7 +739,10 @@ function changePage(e: Event) {
     newUrl = newUrl + "?" + search
   }
   const resource = getResource()
-  fetch(url, { method: "GET" })
+  fetch(url, {
+    method: "GET",
+    headers: getHeaders(),
+  })
     .then((response) => {
       if (response.ok) {
         response.text().then((data) => {
@@ -778,6 +792,7 @@ function search(e: Event) {
   const resource = getResource()
   fetch(url, {
     method: "GET",
+    headers: getHeaders(),
   })
     .then((response) => {
       if (response.ok) {
@@ -807,17 +822,6 @@ function search(e: Event) {
       console.log("Error: " + err)
       alertError(resource.error_submitting_form, undefined, undefined, err)
     })
-}
-function getValue(form: HTMLFormElement | null | undefined, name: string): string | null {
-  if (form) {
-    for (let i = 0; i < form.length; i++) {
-      const ele = form[i] as HTMLInputElement
-      if (ele.name === name) {
-        return ele.value
-      }
-    }
-  }
-  return null
 }
 function getHiddenMessage(nodes: NodeListOf<HTMLFormElement>, name?: string, i?: number): string | null {
   const index = i !== undefined && i >= 0 ? i : 0
@@ -853,6 +857,10 @@ function setInputValue(form: HTMLFormElement | null | undefined, name: string, v
   }
   return false
 }
+function getToken(): string | null {
+  const token = localStorage.getItem(resources.token)
+  return token
+}
 function submitFormData(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
@@ -873,6 +881,7 @@ function submitFormData(e: Event) {
     const formData = new FormData(form)
     fetch(url, {
       method: "POST",
+      headers: getHttpHeaders(),
       body: formData,
     })
       .then((response) => {
@@ -904,6 +913,27 @@ function submitFormData(e: Event) {
       })
   })
 }
+function getHeaders(): any {
+  const token = getToken()
+  if (token && token.length > 0) {
+    return { Authorization: `Bearer ${token}` } // Include the JWT
+  } else {
+    return {}
+  }
+}
+function getHttpHeaders(): any {
+  const token = getToken()
+  if (token && token.length > 0) {
+    return {
+      "Content-Type": "application/json;charset=utf-8", // Ensure the server understands the content type
+      Authorization: `Bearer ${token}`, // Include the JWT
+    }
+  } else {
+    return {
+      "Content-Type": "application/json;charset=utf-8",
+    }
+  }
+}
 function submitForm(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement
@@ -923,9 +953,7 @@ function submitForm(e: Event) {
     const url = getCurrentURL()
     fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json;charset=utf-8", // Ensure the server understands the content type
-      },
+      headers: getHttpHeaders(),
       body: JSON.stringify(data), // Convert the form data to JSON format
     })
       .then((response) => {

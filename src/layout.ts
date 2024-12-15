@@ -135,7 +135,7 @@ function navigate(e: Event) {
   const resource = getResource()
   if (link) {
     const url = link.href
-    fetch(url + "?partial=true", { method: "GET" })
+    fetch(url + "?partial=true", { method: "GET", headers: getHeaders() })
       .then((response) => {
         if (response.ok) {
           response.text().then((data) => {
