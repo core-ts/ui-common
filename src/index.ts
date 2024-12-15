@@ -831,6 +831,16 @@ function getHiddenMessage(nodes: NodeListOf<HTMLFormElement>, name?: string, i?:
   }
   return null
 }
+function showErrorMessage(form: HTMLFormElement, msg: string): boolean {
+  const ele = form.querySelector(".message")
+  if (ele) {
+    if (!ele.classList.contains("alert-error")) {
+      ele.classList.add("alert-error")
+    }
+    ele.innerHTML = msg + '<span onclick="clearMessage(event)"></span>'
+  }
+  return false
+}
 function setInputValue(form: HTMLFormElement | null | undefined, name: string, value: string): boolean {
   if (form) {
     for (let i = 0; i < form.length; i++) {

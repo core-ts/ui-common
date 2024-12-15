@@ -336,7 +336,7 @@ function getLabel(ele?: HTMLElement | null): string {
   }
   return ""
 }
-function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string, r?: StringMap): boolean {
+function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string, r?: StringMap): string | null {
   const value = ele.value
   if (ele.required) {
     if (value.length === 0) {
@@ -346,12 +346,12 @@ function checkRequired(ele: HTMLInputElement | HTMLSelectElement, label?: string
       const resource = r ? r : getResource()
       const msg = format(resource["error_required"], label)
       addErrorMessage(ele, msg)
-      return true
+      return msg
     }
   }
-  return false
+  return null
 }
-function checkMaxLength(ele: HTMLInputElement, label?: string, r?: StringMap): boolean {
+function checkMaxLength(ele: HTMLInputElement, label?: string, r?: StringMap): string | null {
   if (ele.maxLength >= 0 && ele.value.length > ele.maxLength) {
     if (!label) {
       label = getLabel(ele)
@@ -359,11 +359,11 @@ function checkMaxLength(ele: HTMLInputElement, label?: string, r?: StringMap): b
     const resource = r ? r : getResource()
     const msg = format(resource["error_maxlength"], label, ele.maxLength)
     addErrorMessage(ele, msg)
-    return true
+    return msg
   }
-  return false
+  return null
 }
-function checkMinLength(ele: HTMLInputElement, label?: string, r?: StringMap): boolean {
+function checkMinLength(ele: HTMLInputElement, label?: string, r?: StringMap): string | null {
   if (ele.minLength >= 0 && ele.value.length < ele.minLength) {
     if (!label) {
       label = getLabel(ele)
@@ -371,9 +371,9 @@ function checkMinLength(ele: HTMLInputElement, label?: string, r?: StringMap): b
     const resource = r ? r : getResource()
     const msg = format(resource["error_minlength"], label, ele.maxLength)
     addErrorMessage(ele, msg)
-    return true
+    return msg
   }
-  return false
+  return null
 }
 function validOnBlur(event: Event): void {
   const ele = event.target as HTMLInputElement
@@ -474,12 +474,12 @@ function dateOnBlur(event: Event, dateOnly?: boolean) {
   const resource = getResource()
   checkDate(target, label, resource, dateOnly)
 }
-function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, dateOnly?: boolean): boolean {
+function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, dateOnly?: boolean): string | null {
   const v = new Date(ele.value)
   if (isNaN(v.getTime())) {
     const msg = format(resource["error_date"], label)
     addErrorMessage(ele, msg)
-    return false
+    return msg
   } else {
     if (ele.min.length > 0) {
       if (ele.min === "now") {
@@ -488,7 +488,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
           if (v < d) {
             const msg = format(resource["error_from_now"], label)
             addErrorMessage(ele, msg)
-            return false
+            return msg
           }
         }
       } else if (ele.min === "tomorrow") {
@@ -496,7 +496,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
         if (v < d) {
           const msg = format(resource["error_from_tomorrow"], label)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       } else {
         const d = new Date(ele.min)
@@ -504,7 +504,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
           const v2 = dateOnly ? formatDate(d, "YYYY-MM-DD") : formatLongDateTime(d, "YYYY-MM-DD")
           let msg = format(resource["error_from"], label, v2)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       }
     }
@@ -515,7 +515,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
           if (v < d) {
             const msg = format(resource["error_after_now"], label)
             addErrorMessage(ele, msg)
-            return false
+            return msg
           }
         }
       } else if (ele.max === "tomorrow") {
@@ -523,7 +523,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
         if (v < d) {
           const msg = format(resource["error_after_tomorrow"], label)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       } else {
         const d = new Date(ele.max)
@@ -531,7 +531,7 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
           const v2 = dateOnly ? formatDate(d, "YYYY-MM-DD") : formatLongDateTime(d, "YYYY-MM-DD")
           let msg = format(resource["error_after"], label, v2)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       }
     }
@@ -546,14 +546,14 @@ function checkDate(ele: HTMLInputElement, label: string, resource: StringMap, da
             const minLabel = getLabel(minElement)
             const msg = format(resource["error_from"], label, minLabel)
             addErrorMessage(minElement, msg)
-            return false
+            return msg
           }
         }
       }
     }
   }
 
-  return true
+  return null
 }
 function isCommaSeparator(locale?: Locale | null | string) {
   if (!locale) {
@@ -777,13 +777,13 @@ function validateOnBlur(event: Event, includeReadOnly?: boolean): void {
   removeError(target)
   validateElement(event.target as HTMLInputElement, undefined, includeReadOnly)
 }
-function validateElement(ele: HTMLInputElement, locale?: Locale | string | null, includeReadOnly?: boolean): boolean {
+function validateElement(ele: HTMLInputElement, locale?: Locale | string | null, includeReadOnly?: boolean): string | null {
   if (!ele) {
-    return true
+    return null
   }
 
   if (!ele || (ele.readOnly && includeReadOnly === false) || ele.disabled || ele.hidden || ele.style.display === "none") {
-    return true
+    return null
   }
   let nodeName = ele.nodeName
   if (nodeName === "INPUT") {
@@ -796,17 +796,17 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
     nodeName = "SELECT"
   }
   if (nodeName === "BUTTON" || nodeName === "RESET" || nodeName === "SUBMIT") {
-    return true
+    return null
   }
 
   const parent = getContainer(ele)
   if (parent) {
     if (parent.hidden || parent.style.display === "none") {
-      return true
+      return null
     } else {
       const p = findParent(parent, "SECTION")
       if (p && (p.hidden || p.style.display === "none")) {
-        return true
+        return null
       }
     }
   }
@@ -815,12 +815,21 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
 
   const label = getLabel(ele)
   const resource = getResource()
-  if (checkRequired(ele, label, resource) || checkMinLength(ele, label, resource) || checkMaxLength(ele, label, resource)) {
-    return false
+  let msg0 = checkRequired(ele, label, resource)
+  if (msg0) {
+    return msg0
+  }
+  msg0 = checkMinLength(ele, label, resource)
+  if (msg0) {
+    return msg0
+  }
+  msg0 = checkMaxLength(ele, label, resource)
+  if (msg0) {
+    return msg0
   }
 
   if (!value || value === "") {
-    return true
+    return null
   }
 
   let ctype = ele.getAttribute("type")
@@ -848,14 +857,14 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
         msg = "Pattern Error"
       }
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   }
   if (datatype === "email") {
     if (value.length > 0 && !isEmail(value)) {
       const msg = format(resource["error_email"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "number" || datatype === "integer" || datatype === "currency" || datatype === "string-currency" || datatype === "percentage") {
     const v = checkNumber(ele, locale, resource)
@@ -871,66 +880,66 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
       }
     }
   } else if (ctype === "date" || ctype === "datetime-local" || ctype === "datetime") {
-    const valid = checkDate(ele, label, resource, ctype === "date")
-    if (!valid) {
-      return false
+    const msg = checkDate(ele, label, resource, ctype === "date")
+    if (msg) {
+      return msg
     }
   } else if (datatype === "url") {
     if (!isUrl(value)) {
       const msg = format(resource["error_url"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "phone") {
     const phoneStr = formatter.removePhoneFormat(value)
     if (!tel.isPhone(phoneStr)) {
       const msg = format(resource["error_phone"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "fax") {
     const phoneStr = formatter.removeFaxFormat(value)
     if (!tel.isFax(phoneStr)) {
       const msg = format(resource["error_fax"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "code") {
     if (!isValidCode(value)) {
       const msg = format(resource["error_code"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "dash-code") {
     if (!isDashCode(value)) {
       const msg = format(resource["error_dash_code"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "digit") {
     if (!isDigitOnly(value)) {
       const msg = format(resource["error_digit"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "dash-digit") {
     if (!isDashDigit(value)) {
       const msg = format(resource["error_dash_digit"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "routing-number") {
     // business-tax-id
     if (!isDashDigit(value)) {
       const msg = format(resource["error_routing_number"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "check-number") {
     if (!isCheckNumber(value)) {
       const msg = format(resource["error_check_number"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "post-code") {
     let countryCode = ele.getAttribute("data-country-code")
@@ -940,19 +949,19 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
         if (!isUSPostalCode(value)) {
           const msg = format(resource["error_us_post_code"], label)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       } else if (countryCode === "CA" || countryCode === "CAN") {
         if (!isCAPostalCode(value)) {
           const msg = format(resource["error_ca_post_code"], label)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       } else {
         if (!isDashCode(value)) {
           const msg = format(resource["error_post_code"], label)
           addErrorMessage(ele, msg)
-          return false
+          return msg
         }
       }
     }
@@ -960,17 +969,17 @@ function validateElement(ele: HTMLInputElement, locale?: Locale | string | null,
     if (!isIPv4(value)) {
       const msg = format(resource["error_ipv4"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   } else if (datatype === "ipv6") {
     if (!isIPv6(value)) {
       const msg = format(resource["error_ipv6"], label)
       addErrorMessage(ele, msg)
-      return false
+      return msg
     }
   }
   removeError(ele)
-  return true
+  return null
 }
 
 function isValidForm(form: HTMLFormElement, focusFirst?: boolean, scroll?: boolean): boolean {
@@ -1001,9 +1010,10 @@ function validateForm(form?: HTMLFormElement, locale?: Locale | string | null, f
   }
   let valid = true
   let errorCtrl: HTMLInputElement | null = null
-  let i = 0
+  let errorShown = false
+  const divMessage = form.querySelector(".message")
   const len = form.length
-  for (i = 0; i < len; i++) {
+  for (let i = 0; i < len; i++) {
     const ele = form[i] as HTMLInputElement
     let type = ele.getAttribute("type")
     if (type != null) {
@@ -1012,7 +1022,15 @@ function validateForm(form?: HTMLFormElement, locale?: Locale | string | null, f
     if (type === "checkbox" || type === "radio" || type === "submit" || type === "button" || type === "reset") {
       continue
     } else {
-      if (!validateElement(ele, locale, includeReadOnly)) {
+      const msg = validateElement(ele, locale, includeReadOnly)
+      if (msg) {
+        if (divMessage && !errorShown) {
+          if (!divMessage.classList.contains("alert-error")) {
+            divMessage.classList.add("alert-error")
+          }
+          errorShown = true
+          divMessage.innerHTML = msg + '<span onclick="clearMessage(event)"></span>'
+        }
         valid = false
         if (!errorCtrl) {
           errorCtrl = ele
