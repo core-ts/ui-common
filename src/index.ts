@@ -886,7 +886,24 @@ function showInfoMessageOfForm(form: HTMLFormElement, msg: string): boolean {
   const ele = form.querySelector(".message")
   return showInfoMessage(ele, msg)
 }
-
+function checkRequiredElements(form: HTMLFormElement, names: string[]): boolean {
+  const resource = getResource()
+  const eleMsg = form.querySelector(".message")
+  if (eleMsg) {
+    for (let i = 0; i < names.length; i++) {
+      const ele = getElement(form, names[i]) as HTMLInputElement
+      if (ele) {
+        if (ele.value === "") {
+          const label = getLabel(ele)
+          const msg = format(resource.error_required, label)
+          showErrorMessage(eleMsg, msg)
+          return false
+        }
+      }
+    }
+  }
+  return true
+}
 function setInputValue(form: HTMLFormElement | null | undefined, name: string, value: string): boolean {
   if (form) {
     for (let i = 0; i < form.length; i++) {

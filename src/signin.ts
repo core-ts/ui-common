@@ -1,30 +1,36 @@
-"use strict"
-function login(e) {
+interface SignInResult {
+  status: number
+}
+interface SignInData {
+  token: string
+}
+function login(e: Event) {
   e.preventDefault()
-  const target = e.target
-  const form = target.form
-  const txtUsername = getElement(form, "username")
+  const resource = getResource()
+  const target = e.target as HTMLButtonElement
+  const form = target.form as HTMLFormElement
+  const txtUsername = getElement(form, "username") as HTMLInputElement
   const username = txtUsername.value
   if (username === "") {
     const label = getLabel(txtUsername)
-    const msg = format(resource["error_required"], label)
+    const msg = format(resource.error_required, label)
     showErrorMessage(form, msg)
     return
   }
-  const txtPassword = getElement(form, "password")
+  const txtPassword = getElement(form, "password") as HTMLInputElement
   const password = txtPassword.value
   if (password === "") {
     const label = getLabel(txtPassword)
-    const msg = format(resource["error_required"], label)
+    const msg = format(resource.error_required, label)
     showErrorMessage(form, msg)
     return
   }
-  const map = {
-    2: "fail_authentication",
-    3: "fail_expired_password",
-    4: "fail_locked_account",
-    5: "fail_suspended_account",
-    6: "fail_disabled_account",
+  const map: StringMap = {
+    "2": "fail_authentication",
+    "3": "fail_expired_password",
+    "4": "fail_locked_account",
+    "5": "fail_suspended_account",
+    "6": "fail_disabled_account",
   }
   const url = getCurrentURL()
   const formData = new FormData(form)
@@ -34,19 +40,19 @@ function login(e) {
   })
     .then((response) => {
       if (response.ok) {
-        response.json().then((data) => {
+        response.json().then((data: SignInData) => {
           localStorage.setItem(resources.token, data.token)
           window.location.href = "/"
         })
       } else {
         if (response.status === 403) {
-          response.json().then((result) => {
-            let key = map["" + result.status]
+          response.json().then((result: SignInResult) => {
+            let key: string | undefined = map["" + result.status]
             const message = key ? resource[key] : resource.fail_authentication
             showErrorMessage(form, message)
           })
         } else if (response.status === 422) {
-          response.json().then((errors) => {
+          response.json().then((errors: ErrorMessage[]) => {
             if (errors && errors.length > 0) {
               showErrorMessage(form, "" + errors[0].message)
             } else {
