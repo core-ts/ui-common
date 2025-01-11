@@ -92,6 +92,21 @@ function trimNull(obj: any): any {
   }
   return obj
 }
+let eleHtml: Element | undefined | null
+let isGetHtml = false
+function getLang(): string | undefined {
+  if (!isGetHtml) {
+    eleHtml = document.querySelector("html")
+    isGetHtml = true
+  }
+  if (isGetHtml && eleHtml) {
+    const lang = eleHtml.getAttribute("lang")
+    if (lang && lang.length > 0) {
+      return lang
+    }
+  }
+  return undefined
+}
 function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
@@ -337,7 +352,7 @@ function findParent(e: HTMLElement | null | undefined, className: string, nodeNa
     }
   }
 }
-function addClass(ele: HTMLElement | null | undefined, className: string): boolean {
+function addClass(ele: Element | null | undefined, className: string): boolean {
   if (ele) {
     if (!ele.classList.contains(className)) {
       ele.classList.add(className)
@@ -346,7 +361,7 @@ function addClass(ele: HTMLElement | null | undefined, className: string): boole
   }
   return false
 }
-function addClasses(ele: HTMLElement | null | undefined, classes: string[]): number {
+function addClasses(ele: Element | null | undefined, classes: string[]): number {
   let count = 0
   if (ele) {
     for (let i = 0; i < classes.length; i++) {
@@ -357,7 +372,7 @@ function addClasses(ele: HTMLElement | null | undefined, classes: string[]): num
   }
   return count
 }
-function removeClass(ele: HTMLElement | null | undefined, className: string): boolean {
+function removeClass(ele: Element | null | undefined, className: string): boolean {
   if (ele) {
     if (ele && ele.classList.contains(className)) {
       ele.classList.remove(className)
@@ -366,7 +381,7 @@ function removeClass(ele: HTMLElement | null | undefined, className: string): bo
   }
   return false
 }
-function removeClasses(ele: HTMLElement | null | undefined, classes: string[]): number {
+function removeClasses(ele: Element | null | undefined, classes: string[]): number {
   let count = 0
   if (ele) {
     for (let i = 0; i < classes.length; i++) {
@@ -835,16 +850,43 @@ function getHiddenMessage(nodes: NodeListOf<HTMLFormElement>, name?: string, i?:
   }
   return null
 }
-function showErrorMessage(form: HTMLFormElement, msg: string): boolean {
-  const ele = form.querySelector(".message")
+function showErrorMessage(ele: Element | null, msg: string): boolean {
   if (ele) {
-    if (!ele.classList.contains("alert-error")) {
-      ele.classList.add("alert-error")
-    }
+    removeClasses(ele, ["alert-error", "alert-warning", "alert-info"])
+    ele.classList.add("alert-error")
     ele.innerHTML = msg + '<span onclick="clearMessage(event)"></span>'
   }
   return false
 }
+function showErrorMessageOfForm(form: HTMLFormElement, msg: string): boolean {
+  const ele = form.querySelector(".message")
+  return showErrorMessage(ele, msg)
+}
+function showWarningMessage(ele: Element | null, msg: string): boolean {
+  if (ele) {
+    removeClasses(ele, ["alert-error", "alert-warning", "alert-info"])
+    ele.classList.add("alert-warning")
+    ele.innerHTML = msg + '<span onclick="clearMessage(event)"></span>'
+  }
+  return false
+}
+function showWarningMessageOfForm(form: HTMLFormElement, msg: string): boolean {
+  const ele = form.querySelector(".message")
+  return showWarningMessage(ele, msg)
+}
+function showInfoMessage(ele: Element | null, msg: string): boolean {
+  if (ele) {
+    removeClasses(ele, ["alert-error", "alert-warning", "alert-info"])
+    ele.classList.add("alert-info")
+    ele.innerHTML = msg + '<span onclick="clearMessage(event)"></span>'
+  }
+  return false
+}
+function showInfoMessageOfForm(form: HTMLFormElement, msg: string): boolean {
+  const ele = form.querySelector(".message")
+  return showInfoMessage(ele, msg)
+}
+
 function setInputValue(form: HTMLFormElement | null | undefined, name: string, value: string): boolean {
   if (form) {
     for (let i = 0; i < form.length; i++) {
@@ -915,22 +957,47 @@ function submitFormData(e: Event) {
 }
 function getHeaders(): any {
   const token = getToken()
-  if (token && token.length > 0) {
-    return { Authorization: `Bearer ${token}` } // Include the JWT
+  const lang = getLang()
+  if (lang) {
+    if (token && token.length > 0) {
+      return { "Content-Language": lang, Authorization: `Bearer ${token}` } // Include the JWT
+    } else {
+      return { "Content-Language": lang }
+    }
   } else {
-    return {}
+    if (token && token.length > 0) {
+      return { Authorization: `Bearer ${token}` } // Include the JWT
+    } else {
+      return {}
+    }
   }
 }
 function getHttpHeaders(): any {
   const token = getToken()
-  if (token && token.length > 0) {
-    return {
-      "Content-Type": "application/json;charset=utf-8", // Ensure the server understands the content type
-      Authorization: `Bearer ${token}`, // Include the JWT
+  const lang = getLang()
+  if (lang) {
+    if (token && token.length > 0) {
+      return {
+        "Content-Type": "application/json;charset=utf-8", // Ensure the server understands the content type
+        "Content-Language": lang,
+        Authorization: `Bearer ${token}`, // Include the JWT
+      }
+    } else {
+      return {
+        "Content-Type": "application/json;charset=utf-8",
+        "Content-Language": lang,
+      }
     }
   } else {
-    return {
-      "Content-Type": "application/json;charset=utf-8",
+    if (token && token.length > 0) {
+      return {
+        "Content-Type": "application/json;charset=utf-8", // Ensure the server understands the content type
+        Authorization: `Bearer ${token}`, // Include the JWT
+      }
+    } else {
+      return {
+        "Content-Type": "application/json;charset=utf-8",
+      }
     }
   }
 }

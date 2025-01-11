@@ -226,6 +226,16 @@ function isEmail(email: string | null | undefined): boolean {
   }
   return resources.email.test(email)
 }
+function isUsername(username: string | null | undefined): boolean {
+  if (!username || username.length === 0) {
+    return false
+  }
+  const valid = resources.email.test(username)
+  if (valid) {
+    return valid
+  }
+  return resources.email.test(username + "@gmail.com")
+}
 function isPercentage(v: string): boolean {
   return resources.percentage.test(v)
 }
