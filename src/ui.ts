@@ -228,6 +228,11 @@ function alertError(msg: string, callback?: () => void, header?: string, detail?
   const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")
   showAlert(msg, h, "Alert", "Error", "", buttonText, callback, undefined, detail)
 }
+function alertErrorWithDetails(msg: string, detail?: string, callback?: () => void, header?: string): void {
+  const h = header ? header : sysMessageHeader.getAttribute("data-error")
+  const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")
+  showAlert(msg, h, "Alert", "Error", "", buttonText, callback, undefined, detail)
+}
 function alertWarning(msg: string, callback?: () => void, header?: string): void {
   const h = header ? header : sysMessageHeader.getAttribute("data-warning")
   const buttonText = header ? header : sysMessageHeader.getAttribute("data-ok")

@@ -4,17 +4,18 @@ interface SignInResult {
 interface SignInData {
   token: string
 }
-function login(e: Event) {
+function signin(e: Event) {
   e.preventDefault()
   const resource = getResource()
   const target = e.target as HTMLButtonElement
   const form = target.form as HTMLFormElement
+  const eleMessage = form.querySelector(".message") as Element
   const txtUsername = getElement(form, "username") as HTMLInputElement
   const username = txtUsername.value
   if (username === "") {
     const label = getLabel(txtUsername)
     const msg = format(resource.error_required, label)
-    showErrorMessage(form, msg)
+    showErrorMessage(eleMessage, msg)
     return
   }
   const txtPassword = getElement(form, "password") as HTMLInputElement
@@ -22,7 +23,7 @@ function login(e: Event) {
   if (password === "") {
     const label = getLabel(txtPassword)
     const msg = format(resource.error_required, label)
-    showErrorMessage(form, msg)
+    showErrorMessage(eleMessage, msg)
     return
   }
   const map: StringMap = {
@@ -49,25 +50,25 @@ function login(e: Event) {
           response.json().then((result: SignInResult) => {
             let key: string | undefined = map["" + result.status]
             const message = key ? resource[key] : resource.fail_authentication
-            showErrorMessage(form, message)
+            showErrorMessage(eleMessage, message)
           })
         } else if (response.status === 422) {
           response.json().then((errors: ErrorMessage[]) => {
             if (errors && errors.length > 0) {
-              showErrorMessage(form, "" + errors[0].message)
+              showErrorMessage(eleMessage, "" + errors[0].message)
             } else {
-              showErrorMessage(form, resource.fail_authentication)
+              showErrorMessage(eleMessage, resource.fail_authentication)
             }
           })
         } else {
           console.error("Error: ", response.statusText)
-          alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+          alertErrorWithDetails(resource.error_submit_failed, response.statusText)
         }
       }
     })
     .catch((err) => {
       hideLoading()
       console.log("Error: " + err)
-      alertError(resource.error_submitting_form, undefined, undefined, err)
+      alertErrorWithDetails(resource.error_submitting_form, err)
     })
 }
