@@ -779,12 +779,12 @@ function changePage(e: Event) {
         })
       } else {
         console.error("Error: ", response.statusText)
-        alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+        alertError(resource.error_submit_failed, response.statusText)
       }
     })
     .catch((err) => {
       console.log("Error: " + err)
-      alertError(resource.error_submitting_form, undefined, undefined, err)
+      alertError(resource.error_submitting_form, err)
     })
 }
 
@@ -830,12 +830,12 @@ function search(e: Event) {
         })
       } else {
         console.error("Error: ", response.statusText)
-        alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+        alertError(resource.error_submit_failed, response.statusText)
       }
     })
     .catch((err) => {
       console.log("Error: " + err)
-      alertError(resource.error_submitting_form, undefined, undefined, err)
+      alertError(resource.error_submitting_form, err)
     })
 }
 function getHiddenMessage(nodes: NodeListOf<HTMLFormElement>, name?: string, i?: number): string | null {
@@ -962,13 +962,13 @@ function submitFormData(e: Event) {
         } else {
           hideLoading()
           console.error("Error: ", response.statusText)
-          alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+          alertError(resource.error_submit_failed, response.statusText)
         }
       })
       .catch((err) => {
         hideLoading()
         console.log("Error: " + err)
-        alertError(resource.error_submitting_form, undefined, undefined, err)
+        alertError(resource.error_submitting_form, err)
       })
   })
 }
@@ -1055,9 +1055,9 @@ function submitForm(e: Event) {
           } else if (response.status === 409) {
             alertError(resource.error_409)
           } else if (response.status === 400) {
-            alertError(resource.error_400, undefined, undefined, response.statusText)
+            alertError(resource.error_400, response.statusText)
           } else {
-            alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+            alertError(resource.error_submit_failed, response.statusText)
           }
         }
         hideLoading()
@@ -1065,7 +1065,7 @@ function submitForm(e: Event) {
       .catch((err) => {
         hideLoading()
         console.log("Error: " + err)
-        alertError(resource.error_submitting_form, undefined, undefined, err)
+        alertError(resource.error_submitting_form, err)
       })
   })
 }

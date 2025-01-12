@@ -62,13 +62,13 @@ function signin(e: Event) {
           })
         } else {
           console.error("Error: ", response.statusText)
-          alertErrorWithDetails(resource.error_submit_failed, response.statusText)
+          alertError(resource.error_submit_failed, response.statusText)
         }
       }
     })
     .catch((err) => {
       hideLoading()
       console.log("Error: " + err)
-      alertErrorWithDetails(resource.error_submitting_form, err)
+      alertError(resource.error_submitting_form, err)
     })
 }

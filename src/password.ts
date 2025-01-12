@@ -68,14 +68,14 @@ function changePassword(e: Event) {
           showErrorMessage(eleMessage, resource.fail_change_password)
         } else {
           console.error("Error: ", response.statusText)
-          alertErrorWithDetails(resource.error_submit_failed, response.statusText)
+          alertError(resource.error_submit_failed, response.statusText)
         }
       }
     })
     .catch((err) => {
       hideLoading()
       console.log("Error: " + err)
-      alertErrorWithDetails(resource.error_submitting_form, err)
+      alertError(resource.error_submitting_form, err)
     })
 }
 function forgotPassword(e: Event) {
@@ -113,14 +113,14 @@ function forgotPassword(e: Event) {
           showErrorMessage(eleMessage, resource.fail_forgot_password)
         } else {
           console.error("Error: ", response.statusText)
-          alertErrorWithDetails(resource.error_submit_failed, response.statusText)
+          alertError(resource.error_submit_failed, response.statusText)
         }
       }
     })
     .catch((err) => {
       hideLoading()
       console.log("Error: " + err)
-      alertErrorWithDetails(resource.error_submitting_form, err)
+      alertError(resource.error_submitting_form, err)
     })
 }
 function resetPassword(e: Event) {
@@ -187,13 +187,13 @@ function resetPassword(e: Event) {
           showErrorMessage(eleMessage, resource.fail_reset_password)
         } else {
           console.error("Error: ", response.statusText)
-          alertErrorWithDetails(resource.error_submit_failed, response.statusText)
+          alertError(resource.error_submit_failed, response.statusText)
         }
       }
     })
     .catch((err) => {
       hideLoading()
       console.log("Error: " + err)
-      alertErrorWithDetails(resource.error_submitting_form, err)
+      alertError(resource.error_submitting_form, err)
     })
 }

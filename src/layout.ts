@@ -170,12 +170,12 @@ function navigate(e: Event) {
           })
         } else {
           console.error("Error: ", response.statusText)
-          alertError(resource.error_submit_failed, undefined, undefined, response.statusText)
+          alertError(resource.error_submit_failed, response.statusText)
         }
       })
       .catch((err) => {
         console.log("Error: " + err)
-        alertError(resource.error_submitting_form, undefined, undefined, err)
+        alertError(resource.error_submitting_form, err)
       })
   }
 }
