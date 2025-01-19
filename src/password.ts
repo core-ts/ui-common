@@ -41,8 +41,20 @@ function changePassword(e: Event) {
     showErrorMessage(eleMessage, msg)
     return
   }
+  const user: any = { username, currentPassword, password }
+  const txtPasscode = getElement(form, "passcode") as HTMLInputElement
+  if (!isHidden(txtPasscode)) {
+    const passcode = txtPasscode.value
+    if (passcode === "") {
+      const label = getLabel(txtPasscode)
+      const msg = format(resource.error_required, label)
+      showErrorMessage(eleMessage, msg)
+      return
+    }
+    user.passcode = passcode
+    user.step = 2
+  }
   const url = getCurrentURL()
-  const user = { username, currentPassword, password }
   fetch(url, {
     method: "POST",
     headers: getHttpHeaders(),
@@ -65,7 +77,14 @@ function changePassword(e: Event) {
         } else if (response.status === 409) {
           showErrorMessage(eleMessage, resource.password_duplicate)
         } else if (response.status === 403) {
-          showErrorMessage(eleMessage, resource.fail_change_password)
+          if (isHidden(txtPasscode.parentElement)) {
+            hideElement(txtCurrentPassword.parentElement)
+            hideElement(txtPassword.parentElement)
+            hideElement(txtConfirmPassword.parentElement)
+            unhideElement(txtPasscode.parentElement)
+          } else {
+            showErrorMessage(eleMessage, resource.msg_passcode_incorrect)
+          }
         } else {
           console.error("Error: ", response.statusText)
           alertError(resource.error_submit_failed, response.statusText)
