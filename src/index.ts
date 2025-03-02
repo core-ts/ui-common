@@ -101,9 +101,10 @@ function getDecimalSeparator(ele: HTMLInputElement): string {
 const histories: string[] = []
 const historyMax = 10
 function goBack() {
-  const url = histories.pop()
+  let url = histories.pop()
   if (url) {
-    fetch(url + "?partial=true", { method: "GET", headers: getHeaders() })
+    url = url.indexOf("?") >= 0 ? url + "&partial=true" : url + "?partial=true"
+    fetch(url, { method: "GET", headers: getHeaders() })
       .then((response) => {
         if (response.ok) {
           response.text().then((data) => {
