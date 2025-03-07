@@ -103,14 +103,15 @@ const historyMax = 10
 function goBack() {
   let url = histories.pop()
   if (url) {
-    url = url.indexOf("?") >= 0 ? url + "&partial=true" : url + "?partial=true"
-    fetch(url, { method: "GET", headers: getHeaders() })
+    const newUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + "partial=true"
+    fetch(newUrl, { method: "GET", headers: getHeaders() })
       .then((response) => {
         if (response.ok) {
           response.text().then((data) => {
             const pageBody = document.getElementById("pageBody")
             if (pageBody) {
               pageBody.innerHTML = data
+              window.history.pushState({ pageTitle: "" }, "", url)
               const forms = pageBody.querySelectorAll("form")
               for (let i = 0; i < forms.length; i++) {
                 registerEvents(forms[i])
