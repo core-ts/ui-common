@@ -211,10 +211,10 @@ function changePage(e: Event) {
             if (pageBody) {
               pageBody.innerHTML = data
               const forms = pageBody.querySelectorAll("form")
-              for (let i = 0; i < forms.length; i++) {
-                registerEvents(forms[i])
-              }
               setTimeout(function () {
+                for (let i = 0; i < forms.length; i++) {
+                  registerEvents(forms[i])
+                }
                 const msg = getHiddenMessage(forms, resources.hiddenMessage)
                 if (msg && msg.length > 0) {
                   toast(msg)
@@ -224,13 +224,13 @@ function changePage(e: Event) {
             window.history.pushState(undefined, "Title", newUrl)
             hideLoading()
           })
-          .catch((err) => hideLoading())
+          .catch((err) => handleError(err, resource.error_response_body))
       } else {
         hideLoading()
         handleGetError(response, resource)
       }
     })
-    .catch((err) => handleNetworkError(err, resource.error_network))
+    .catch((err) => handleError(err, resource.error_network))
 }
 
 function search(e: Event) {
@@ -264,10 +264,10 @@ function search(e: Event) {
             if (pageBody) {
               pageBody.innerHTML = data
               const forms = pageBody.querySelectorAll("form")
-              for (let i = 0; i < forms.length; i++) {
-                registerEvents(forms[i])
-              }
               setTimeout(function () {
+                for (let i = 0; i < forms.length; i++) {
+                  registerEvents(forms[i])
+                }
                 const msg = getHiddenMessage(forms, resources.hiddenMessage)
                 if (msg && msg.length > 0) {
                   toast(msg)
@@ -277,11 +277,11 @@ function search(e: Event) {
             window.history.pushState(undefined, "Title", newUrl)
             hideLoading()
           })
-          .catch((err) => hideLoading())
+          .catch((err) => handleError(err, resource.error_response_body))
       } else {
         hideLoading()
         handleGetError(response, resource)
       }
     })
-    .catch((err) => handleNetworkError(err, resource.error_network))
+    .catch((err) => handleError(err, resource.error_network))
 }

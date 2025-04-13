@@ -60,6 +60,7 @@ const resource: StringMap = {
   error_410: "The resource is no longer available at the server and no forwarding address is known.",
 
   error_network: "The network is down. Cannot connect to server.",
+  error_response_body: "Error while processing the response body.",
   error_submit_failed: "Failed to submit data.",
 }
 function getResource(): StringMap {

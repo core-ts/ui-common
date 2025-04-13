@@ -125,6 +125,7 @@ function goBack() {
   let url = histories.pop()
   if (url) {
     const newUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + "partial=true"
+    showLoading()
     fetch(newUrl, { method: "GET", headers: getHeaders() })
       .then((response) => {
         if (response.ok) {
@@ -875,7 +876,7 @@ function getConfirmMessage(ele: HTMLButtonElement, resource: StringMap): string 
   let confirmMsg = ele.getAttribute("data-message")
   return confirmMsg ? confirmMsg : resource.msg_confirm_save
 }
-function handleNetworkError(err: any, msg: string) {
+function handleError(err: any, msg: string) {
   hideLoading()
   console.log("Error: " + err)
   alertError(msg, err)
@@ -918,13 +919,13 @@ function submitFormData(e: Event) {
                 alertSuccess(successMsg)
               }
             })
-            .catch((err) => hideLoading())
+            .catch((err) => handleError(err, resource.error_response_body))
         } else {
           hideLoading()
           handlePostError(response, resource)
         }
       })
-      .catch((err) => handleNetworkError(err, resource.error_network))
+      .catch((err) => handleError(err, resource.error_network))
   })
 }
 function handlePostError(response: Response, resource: StringMap) {
@@ -971,7 +972,7 @@ function submitForm(e: Event) {
         }
         hideLoading()
       })
-      .catch((err) => handleNetworkError(err, resource.error_network))
+      .catch((err) => handleError(err, resource.error_network))
   })
 }
 function handleJsonError(response: Response, resource: StringMap, form: HTMLFormElement, showErrors?: (errs: ErrorMessage[]) => void, allErrors?: boolean) {
@@ -982,20 +983,23 @@ function handleJsonError(response: Response, resource: StringMap, form: HTMLForm
   } else if (response.status === 410) {
     alertError(resource.error_410)
   } else if (response.status === 422) {
-    response.json().then((errors) => {
-      if (showErrors) {
-        if (allErrors) {
-          showErrors(errors)
-        } else {
-          const errs = showFormError(form, errors)
-          if (errs && errs.length > 0) {
-            showErrors(errs)
+    response
+      .json()
+      .then((errors) => {
+        if (showErrors) {
+          if (allErrors) {
+            showErrors(errors)
+          } else {
+            const errs = showFormError(form, errors)
+            if (errs && errs.length > 0) {
+              showErrors(errs)
+            }
           }
+        } else {
+          showFormError(form, errors)
         }
-      } else {
-        showFormError(form, errors)
-      }
-    })
+      })
+      .catch((err) => handleError(err, resource.error_response_body))
   } else if (response.status === 409) {
     alertError(resource.error_409)
   } else if (response.status === 400) {
