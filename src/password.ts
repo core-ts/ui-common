@@ -91,11 +91,7 @@ function changePassword(e: Event) {
         }
       }
     })
-    .catch((err) => {
-      hideLoading()
-      console.log("Error: " + err)
-      alertError(resource.error_submitting_form, err)
-    })
+    .catch((err) => handleNetworkError(err, resource.error_network))
 }
 function forgotPassword(e: Event) {
   e.preventDefault()
@@ -136,11 +132,7 @@ function forgotPassword(e: Event) {
         }
       }
     })
-    .catch((err) => {
-      hideLoading()
-      console.log("Error: " + err)
-      alertError(resource.error_submitting_form, err)
-    })
+    .catch((err) => handleNetworkError(err, resource.error_network))
 }
 function resetPassword(e: Event) {
   e.preventDefault()
@@ -210,9 +202,5 @@ function resetPassword(e: Event) {
         }
       }
     })
-    .catch((err) => {
-      hideLoading()
-      console.log("Error: " + err)
-      alertError(resource.error_submitting_form, err)
-    })
+    .catch((err) => handleNetworkError(err, resource.error_network))
 }

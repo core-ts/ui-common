@@ -161,19 +161,12 @@ function navigate(e: Event, ignoreLang?: boolean) {
             }
           })
         } else {
-          if (response.status === 403) {
-            alertError(resource.error_403, response.statusText)
-          } else if (response.status === 404) {
-            alertError(resource.error_404, response.statusText)
-          } else {
-            console.error("Error: ", response.statusText)
-            alertError(resource.error_submit_failed, response.statusText)
-          }
+          handleGetError(response, resource)
         }
       })
       .catch((err) => {
         console.log("Error: " + err)
-        alertError(resource.error_submitting_form, err)
+        alertError(resource.error_network, err)
       })
   }
 }

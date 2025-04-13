@@ -66,9 +66,5 @@ function signin(e: Event) {
         }
       }
     })
-    .catch((err) => {
-      hideLoading()
-      console.log("Error: " + err)
-      alertError(resource.error_submitting_form, err)
-    })
+    .catch((err) => handleNetworkError(err, resource.error_network))
 }
