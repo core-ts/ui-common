@@ -909,10 +909,12 @@ function submitFormData(e: Event) {
               const pageBody = document.getElementById("pageBody")
               if (pageBody) {
                 pageBody.innerHTML = data
-                const forms = pageBody.querySelectorAll("form")
-                for (let i = 0; i < forms.length; i++) {
-                  registerEvents(forms[i])
-                }
+                setTimeout(function () {
+                  const forms = pageBody.querySelectorAll("form")
+                  for (let i = 0; i < forms.length; i++) {
+                    registerEvents(forms[i])
+                  }
+                }, 0)
               }
               hideLoading()
               if (successMsg) {

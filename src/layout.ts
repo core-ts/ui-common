@@ -125,46 +125,46 @@ function navigate(e: Event, ignoreLang?: boolean) {
               const pageBody = document.getElementById("pageBody")
               if (pageBody) {
                 pageBody.innerHTML = data
-                hideLoading()
                 const span = link.querySelector("span")
                 const title = span ? span.innerText : link.innerText
                 window.history.pushState({ pageTitle: title }, "", url)
-                const parent = findParentNode(target, "LI")
-                if (parent) {
-                  const nav = findParentNode(parent, "NAV")
-                  if (nav) {
-                    let elI = nav.querySelector(".active")
-                    if (elI) {
-                      elI.classList.remove("active")
-                    }
-                    elI = nav.querySelector(".active")
-                    if (elI) {
-                      elI.classList.remove("active")
-                    }
-                    elI = nav.querySelector(".active")
-                    if (elI) {
-                      elI.classList.remove("active")
-                    }
-                  }
-                  parent.classList.add("active")
-                  const pp = parent.parentElement?.parentElement
-                  if (pp && pp.nodeName === "LI") {
-                    pp.classList.add("active")
-                  }
-                }
-                const forms = pageBody.querySelectorAll("form")
-                for (let i = 0; i < forms.length; i++) {
-                  registerEvents(forms[i])
-                }
                 setTimeout(function () {
+                  const parent = findParentNode(target, "LI")
+                  if (parent) {
+                    const nav = findParentNode(parent, "NAV")
+                    if (nav) {
+                      let elI = nav.querySelector(".active")
+                      if (elI) {
+                        elI.classList.remove("active")
+                      }
+                      elI = nav.querySelector(".active")
+                      if (elI) {
+                        elI.classList.remove("active")
+                      }
+                      elI = nav.querySelector(".active")
+                      if (elI) {
+                        elI.classList.remove("active")
+                      }
+                    }
+                    parent.classList.add("active")
+                    const pp = parent.parentElement?.parentElement
+                    if (pp && pp.nodeName === "LI") {
+                      pp.classList.add("active")
+                    }
+                  }
+                }, 0)
+                setTimeout(function () {
+                  const forms = pageBody.querySelectorAll("form")
+                  for (let i = 0; i < forms.length; i++) {
+                    registerEvents(forms[i])
+                  }
                   const msg = getHiddenMessage(forms, resources.hiddenMessage)
                   if (msg && msg.length > 0) {
                     toast(msg)
                   }
                 }, 0)
-              } else {
-                hideLoading()
               }
+              hideLoading()
             })
             .catch((err) => handleError(err, resource.error_response_body))
         } else {

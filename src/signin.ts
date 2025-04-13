@@ -35,6 +35,7 @@ function signin(e: Event) {
   }
   const url = getCurrentURL()
   const formData = new FormData(form)
+  showLoading()
   fetch(url, {
     method: "POST",
     body: formData,

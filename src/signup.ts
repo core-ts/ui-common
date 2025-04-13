@@ -48,6 +48,7 @@ function signup(e: Event) {
   }
   const url = getCurrentURL()
   const user = { username, email, password }
+  showLoading()
   fetch(url, {
     method: "POST",
     headers: getHttpHeaders(),
