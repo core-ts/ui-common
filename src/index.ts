@@ -119,6 +119,20 @@ function getDecimalSeparator(ele: HTMLInputElement): string {
   }
   return separator === "," ? "," : "."
 }
+function afterLoaded(pageBody: HTMLElement) {
+  if (pageBody) {
+    setTimeout(function () {
+      const forms = pageBody.querySelectorAll("form")
+      for (let i = 0; i < forms.length; i++) {
+        registerEvents(forms[i])
+      }
+      const msg = getHiddenMessage(forms, resources.hiddenMessage)
+      if (msg && msg.length > 0) {
+        toast(msg)
+      }
+    }, 0)
+  }
+}
 const histories: string[] = []
 const historyMax = 10
 function goBack() {
@@ -129,32 +143,23 @@ function goBack() {
     fetch(newUrl, { method: "GET", headers: getHeaders() })
       .then((response) => {
         if (response.ok) {
-          response.text().then((data) => {
-            const pageBody = document.getElementById("pageBody")
-            if (pageBody) {
-              pageBody.innerHTML = data
-              window.history.pushState({ pageTitle: "" }, "", url)
-              const forms = pageBody.querySelectorAll("form")
-              for (let i = 0; i < forms.length; i++) {
-                registerEvents(forms[i])
+          response
+            .text()
+            .then((data) => {
+              const pageBody = document.getElementById("pageBody")
+              if (pageBody) {
+                pageBody.innerHTML = data
+                window.history.pushState({ pageTitle: "" }, "", url)
+                afterLoaded(pageBody)
               }
-              setTimeout(function () {
-                const msg = getHiddenMessage(forms, resources.hiddenMessage)
-                if (msg && msg.length > 0) {
-                  toast(msg)
-                }
-              }, 0)
-            }
-          })
+            })
+            .catch((err) => handleError(err, resource.error_response_body))
         } else {
           console.error("Error: ", response.statusText)
           alertError(resource.error_submit_failed, response.statusText)
         }
       })
-      .catch((err) => {
-        console.log("Error: " + err)
-        alertError(resource.error_network, err)
-      })
+      .catch((err) => handleError(err, resource.error_network))
   }
 }
 const d = "data-value"
@@ -867,6 +872,8 @@ function handleGetError(response: Response, resource: StringMap) {
     alertError(resource.error_403, response.statusText)
   } else if (response.status === 404) {
     alertError(resource.error_404, response.statusText)
+  } else if (response.status === 400) {
+    alertError(resource.error_400, response.statusText)
   } else {
     console.error("Error: ", response.statusText)
     alertError(resource.error_submit_failed, response.statusText)
@@ -909,12 +916,7 @@ function submitFormData(e: Event) {
               const pageBody = document.getElementById("pageBody")
               if (pageBody) {
                 pageBody.innerHTML = data
-                setTimeout(function () {
-                  const forms = pageBody.querySelectorAll("form")
-                  for (let i = 0; i < forms.length; i++) {
-                    registerEvents(forms[i])
-                  }
-                }, 0)
+                afterLoaded(pageBody)
               }
               hideLoading()
               if (successMsg) {
@@ -935,8 +937,12 @@ function handlePostError(response: Response, resource: StringMap) {
     window.location.href = buildLoginUrl()
   } else if (response.status === 403) {
     alertError(resource.error_403)
+  } else if (response.status === 409) {
+    alertError(resource.error_409)
   } else if (response.status === 410) {
     alertError(resource.error_410)
+  } else if (response.status === 400) {
+    alertError(resource.error_400, response.statusText)
   } else {
     console.error("Error: ", response.statusText)
     alertError(resource.error_submit_failed, response.statusText)
@@ -955,6 +961,7 @@ function submitForm(e: Event) {
     return
   }
   const resource = getResource()
+  const successMsg = getSuccessMessage(target, resource)
   const confirmMsg = getConfirmMessage(target, resource)
   showConfirm(confirmMsg, () => {
     showLoading()
@@ -966,13 +973,12 @@ function submitForm(e: Event) {
       body: JSON.stringify(data), // Convert the form data to JSON format
     })
       .then((response) => {
+        hideLoading()
         if (response.ok) {
-          const successText = getSuccessMessage(target, resource)
-          alertSuccess(successText)
+          alertSuccess(successMsg)
         } else {
           handleJsonError(response, resource, form)
         }
-        hideLoading()
       })
       .catch((err) => handleError(err, resource.error_network))
   })
@@ -982,6 +988,8 @@ function handleJsonError(response: Response, resource: StringMap, form: HTMLForm
     window.location.href = buildLoginUrl()
   } else if (response.status === 403) {
     alertError(resource.error_403)
+  } else if (response.status === 409) {
+    alertError(resource.error_409)
   } else if (response.status === 410) {
     alertError(resource.error_410)
   } else if (response.status === 422) {
@@ -1002,8 +1010,6 @@ function handleJsonError(response: Response, resource: StringMap, form: HTMLForm
         }
       })
       .catch((err) => handleError(err, resource.error_response_body))
-  } else if (response.status === 409) {
-    alertError(resource.error_409)
   } else if (response.status === 400) {
     alertError(resource.error_400, response.statusText)
   } else {

@@ -176,6 +176,7 @@ function getField(search: string, fieldName: string): string {
   const j = search.indexOf("&", i + fieldName.length)
   return j >= 0 ? search.substring(i, j) : search.substring(i)
 }
+
 function changePage(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLAnchorElement
@@ -210,16 +211,7 @@ function changePage(e: Event) {
             const pageBody = document.getElementById("pageBody")
             if (pageBody) {
               pageBody.innerHTML = data
-              const forms = pageBody.querySelectorAll("form")
-              setTimeout(function () {
-                for (let i = 0; i < forms.length; i++) {
-                  registerEvents(forms[i])
-                }
-                const msg = getHiddenMessage(forms, resources.hiddenMessage)
-                if (msg && msg.length > 0) {
-                  toast(msg)
-                }
-              }, 0)
+              afterLoaded(pageBody)
             }
             window.history.pushState(undefined, "Title", newUrl)
             hideLoading()
@@ -232,7 +224,6 @@ function changePage(e: Event) {
     })
     .catch((err) => handleError(err, resource.error_network))
 }
-
 function search(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLInputElement
@@ -263,16 +254,7 @@ function search(e: Event) {
             const pageBody = document.getElementById("pageBody")
             if (pageBody) {
               pageBody.innerHTML = data
-              const forms = pageBody.querySelectorAll("form")
-              setTimeout(function () {
-                for (let i = 0; i < forms.length; i++) {
-                  registerEvents(forms[i])
-                }
-                const msg = getHiddenMessage(forms, resources.hiddenMessage)
-                if (msg && msg.length > 0) {
-                  toast(msg)
-                }
-              }, 0)
+              afterLoaded(pageBody)
             }
             window.history.pushState(undefined, "Title", newUrl)
             hideLoading()

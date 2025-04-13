@@ -128,6 +128,7 @@ function navigate(e: Event, ignoreLang?: boolean) {
                 const span = link.querySelector("span")
                 const title = span ? span.innerText : link.innerText
                 window.history.pushState({ pageTitle: title }, "", url)
+                afterLoaded(pageBody)
                 setTimeout(function () {
                   const parent = findParentNode(target, "LI")
                   if (parent) {
@@ -151,16 +152,6 @@ function navigate(e: Event, ignoreLang?: boolean) {
                     if (pp && pp.nodeName === "LI") {
                       pp.classList.add("active")
                     }
-                  }
-                }, 0)
-                setTimeout(function () {
-                  const forms = pageBody.querySelectorAll("form")
-                  for (let i = 0; i < forms.length; i++) {
-                    registerEvents(forms[i])
-                  }
-                  const msg = getHiddenMessage(forms, resources.hiddenMessage)
-                  if (msg && msg.length > 0) {
-                    toast(msg)
                   }
                 }, 0)
               }
