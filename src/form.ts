@@ -38,21 +38,6 @@ function parseDate(v: string, format?: string): Date {
   return new Date(year, month, day)
 }
 
-let eleHtml: Element | undefined | null
-let isGetHtml = false
-function getLang(): string | undefined {
-  if (!isGetHtml) {
-    eleHtml = document.querySelector("html")
-    isGetHtml = true
-  }
-  if (isGetHtml && eleHtml) {
-    const lang = eleHtml.getAttribute("lang")
-    if (lang && lang.length > 0) {
-      return lang
-    }
-  }
-  return undefined
-}
 function getDecimalSeparator(ele: HTMLInputElement): string {
   let separator = ele.getAttribute("data-decimal-separator")
   if (!separator) {
@@ -521,27 +506,6 @@ function setInputValue(form: HTMLFormElement | null | undefined, name: string, v
   return false
 }
 
-function getToken(): string | null {
-  const token = localStorage.getItem(resources.token)
-  return token
-}
-function getHeaders(): any {
-  const token = getToken()
-  const lang = getLang()
-  if (lang) {
-    if (token && token.length > 0) {
-      return { "Content-Language": lang, Authorization: `Bearer ${token}` } // Include the JWT
-    } else {
-      return { "Content-Language": lang }
-    }
-  } else {
-    if (token && token.length > 0) {
-      return { Authorization: `Bearer ${token}` } // Include the JWT
-    } else {
-      return {}
-    }
-  }
-}
 function getHttpHeaders(): any {
   const token = getToken()
   const lang = getLang()
@@ -589,11 +553,7 @@ function getConfirmMessage(ele: HTMLButtonElement, resource: StringMap): string 
   let confirmMsg = ele.getAttribute("data-message")
   return confirmMsg ? confirmMsg : resource.msg_confirm_save
 }
-function handleError(err: any, msg: string) {
-  hideLoading()
-  console.log("Error: " + err)
-  alertError(msg, err)
-}
+
 function submitFormData(e: Event) {
   e.preventDefault()
   const target = e.target as HTMLButtonElement

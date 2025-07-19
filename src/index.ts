@@ -63,6 +63,49 @@ function buildLoginUrl() {
     return resources.login + "?" + resources.redirect + "=" + encodeURIComponent(r)
   }
 }
+
+let eleHtml: Element | undefined | null
+let isGetHtml = false
+function getLang(): string | undefined {
+  if (!isGetHtml) {
+    eleHtml = document.querySelector("html")
+    isGetHtml = true
+  }
+  if (isGetHtml && eleHtml) {
+    const lang = eleHtml.getAttribute("lang")
+    if (lang && lang.length > 0) {
+      return lang
+    }
+  }
+  return undefined
+}
+function getToken(): string | null {
+  const token = localStorage.getItem(resources.token)
+  return token
+}
+function getHeaders(): any {
+  const token = getToken()
+  const lang = getLang()
+  if (lang) {
+    if (token && token.length > 0) {
+      return { "Content-Language": lang, Authorization: `Bearer ${token}` } // Include the JWT
+    } else {
+      return { "Content-Language": lang }
+    }
+  } else {
+    if (token && token.length > 0) {
+      return { Authorization: `Bearer ${token}` } // Include the JWT
+    } else {
+      return {}
+    }
+  }
+}
+function handleError(err: any, msg: string) {
+  hideLoading()
+  console.log("Error: " + err)
+  alertError(msg, err)
+}
+
 const histories: string[] = []
 const historyMax = 10
 function goBack() {
