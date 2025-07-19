@@ -44,25 +44,6 @@ class resources {
 function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
-function getRedirect(): string {
-  const loc = window.location.href
-  if (loc.length < 8) {
-    return ""
-  }
-  const i = loc.indexOf("/", 9)
-  if (i < 0) {
-    return ""
-  }
-  return loc.substring(i)
-}
-function buildLoginUrl() {
-  const r = getRedirect()
-  if (r.length === 0) {
-    return resources.login
-  } else {
-    return resources.login + "?" + resources.redirect + "=" + encodeURIComponent(r)
-  }
-}
 
 let eleHtml: Element | undefined | null
 let isGetHtml = false
@@ -98,6 +79,21 @@ function getHeaders(): any {
     } else {
       return {}
     }
+  }
+}
+
+function handleGetError(response: Response, resource: StringMap) {
+  if (response.status === 401) {
+    window.location.href = buildLoginUrl()
+  } else if (response.status === 403) {
+    alertError(resource.error_403, response.statusText)
+  } else if (response.status === 404) {
+    alertError(resource.error_404, response.statusText)
+  } else if (response.status === 400) {
+    alertError(resource.error_400, response.statusText)
+  } else {
+    console.error("Error: ", response.statusText)
+    alertError(resource.error_submit_failed, response.statusText)
   }
 }
 function handleError(err: any, msg: string) {

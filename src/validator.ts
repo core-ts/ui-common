@@ -1,3 +1,10 @@
+interface Locale {
+  decimalSeparator: string
+  groupSeparator: string
+  currencyCode: string
+  currencySymbol: string
+  currencyPattern: number
+}
 function addErrorMessage(ele: HTMLElement | null | undefined, msg?: string, directParent?: boolean): void {
   if (!ele) {
     return
