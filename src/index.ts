@@ -13,6 +13,8 @@ class resources {
   static hiddenMessage = "hidden-message"
   static token = "token"
 
+  static load(pageBody: HTMLElement): void {}
+
   static num1 = / |,|\$|€|£|¥|'|٬|،| /g
   static num2 = / |\.|\$|€|£|¥|'|٬|،| /g
   static phonecodes?: Phones
@@ -163,6 +165,25 @@ function goBack() {
       .catch((err) => handleError(err, resource.error_network))
   }
 }
+
+function getField(search: string, fieldName: string): string {
+  let i = search.indexOf(fieldName + "=")
+  if (i < 0) {
+    return ""
+  }
+  if (i > 0) {
+    if (search.substring(i - 1, 1) != "&") {
+      i = search.indexOf("&" + fieldName + "=")
+      if (i < 0) {
+        return search
+      }
+      i = i + 1
+    }
+  }
+  const j = search.indexOf("&", i + fieldName.length)
+  return j >= 0 ? search.substring(i, j) : search.substring(i)
+}
+
 const d = "data-value"
 function selectOnChange(ele: HTMLSelectElement, attr?: string): void {
   const at = attr && attr.length > 0 ? attr : d
