@@ -1,26 +1,6 @@
 const r1 = / |,|\$|€|£|¥|'|٬|،| /g
 const r2 = / |\.|\$|€|£|¥|'|٬|،| /g
 
-function getRedirect(): string {
-  const loc = window.location.href
-  if (loc.length < 8) {
-    return ""
-  }
-  const i = loc.indexOf("/", 9)
-  if (i < 0) {
-    return ""
-  }
-  return loc.substring(i)
-}
-function buildLoginUrl() {
-  const r = getRedirect()
-  if (r.length === 0) {
-    return resources.login
-  } else {
-    return resources.login + "?" + resources.redirect + "=" + encodeURIComponent(r)
-  }
-}
-
 function parseDate(v: string, format?: string): Date {
   if (!format || format.length === 0) {
     format = "MM/DD/YYYY"
