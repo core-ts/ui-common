@@ -6,7 +6,9 @@
   "types": "./src/index.ts",
   "scripts": {
     "build:lib": "tsc",
-    "clean:lib": "rimraf lib"
+    "clean:lib": "rimraf lib",
+    "tsc": "./node_modules/typescript/bin/tsc",
+    "postinstall": "npm run tsc"
   },
   "devDependencies": {
     "tslint": "5.10.0",
