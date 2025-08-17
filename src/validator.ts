@@ -793,7 +793,7 @@ function formatCurrency(v: string, ele: HTMLInputElement): string {
     }
   }
 }
-function formatNumber(v: number, scale?: number, d?: string | null, g?: string): string {
+function formatNumber(v?: number | null, scale?: number, d?: string | null, g?: string): string {
   if (v == null) {
     return ""
   }

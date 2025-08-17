@@ -5,7 +5,6 @@ function createChip(container: HTMLElement, text: string): HTMLElement {
 
   const close = document.createElement("span")
   close.className = "close"
-  close.innerHTML = "&times;"
   close.onclick = () => chip.remove()
 
   chip.appendChild(close)
@@ -31,7 +30,7 @@ function addChip(triggerElement: HTMLButtonElement | HTMLFormElement, inputName:
 
   if (!form) return
 
-  const input = form.querySelector<HTMLInputElement>(`[name="${inputName}"]`)
+  const input = getElement(form, inputName) as HTMLInputElement
   if (!input) return
 
   const value = input.value.trim()
