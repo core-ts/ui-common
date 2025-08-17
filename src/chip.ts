@@ -13,16 +13,16 @@ function createChip(container: HTMLElement, text: string): HTMLElement {
   return chip
 }
 
-function getChipsById(chipId: string): string[] {
+function getChips(chipId: string): string[] {
   const container = document.getElementById(chipId)
-  return container ? getChips(container) : []
-}
-
-function getChips(container: HTMLElement): string[] {
-  return Array.from(container.querySelectorAll<HTMLElement>(".chip")).map((chip) => {
-    const firstChild = chip.firstChild
-    return firstChild?.textContent?.trim() ?? ""
-  })
+  if (container) {
+    return Array.from(container.querySelectorAll<HTMLElement>(".chip")).map((chip) => {
+      const firstChild = chip.firstChild
+      return firstChild?.textContent?.trim() ?? ""
+    })
+  } else {
+    return []
+  }
 }
 
 function addChip(triggerElement: HTMLButtonElement | HTMLFormElement, inputName: string, chipId: string): void {
@@ -51,4 +51,11 @@ function chipOnKeydown(e: KeyboardEvent, chipId: string) {
       addChip(target.form as HTMLFormElement, target.name, chipId)
     }
   }
+}
+function removeChip(e: Event) {
+  let target = e.target as HTMLElement
+  if (target.tagName === "SPAN") {
+    target = target.parentElement as HTMLDivElement
+  }
+  target.remove()
 }
