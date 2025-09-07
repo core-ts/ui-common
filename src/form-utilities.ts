@@ -122,5 +122,4 @@ function selectOnClick(btn: HTMLButtonElement, name: string, names: string[]) {
   const select = btn.form?.getAttribute("select")
   toggleHiddenInputs(btn.form, name)
   toggleHiddenElements(btn.form, names)
-  toggleHiddenElements(btn.form, ["btnCheckAll", "btnUncheckAll", "btnDelete"])
 }
