@@ -47,6 +47,13 @@ class resources {
 function getCurrentURL() {
   return window.location.origin + window.location.pathname
 }
+function removeLast(url: string): string {
+  const i = url.lastIndexOf("/")
+  if (i > 0) {
+    return url.substring(0, i)
+  }
+  return url
+}
 function getRedirect(): string {
   const loc = window.location.href
   if (loc.length < 8) {
