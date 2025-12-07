@@ -120,9 +120,11 @@ function navigate(e: Event, ignoreLang?: boolean) {
     const search = window.location.search.length > 0 ? window.location.search.substring(1) : ""
     const lang = getField(search, "lang")
     let url = link.href
+    /*
     if (!ignoreLang && lang.length > 0) {
       url = url + (url.indexOf("?") > 0 ? "&" : "?") + lang
     }
+    */
     const lang1 = lang.length > 0 && !ignoreLang ? "&" + lang : ""
     const newUrl = url + (url.indexOf("?") > 0 ? "&" : "?") + "partial=true" + lang1
     showLoading()
