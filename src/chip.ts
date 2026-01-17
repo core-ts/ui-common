@@ -56,7 +56,7 @@ function addChip(triggerElement: HTMLButtonElement | HTMLInputElement, inputName
     if (!msg) {
       msg = "Duplicate value"
     }
-    alertWarning(msg)
+    alertError(msg)
     return
   }
   createChip(chipList, value, value, parent, isCheck)
