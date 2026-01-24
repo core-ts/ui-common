@@ -22,7 +22,7 @@ class resources {
   static hiddenMessage = "hidden-message"
   static token = "token"
   static partial = "partial"
-  static sub = "sub"
+  static subPartial = "sub"
   static page = "page"
   static limit = "limit"
   static fields = "fields"
