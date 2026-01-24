@@ -126,7 +126,7 @@ function navigate(e: Event, ignoreLang?: boolean, partId?: string) {
     }
     */
     const lang1 = lang.length > 0 && !ignoreLang ? "&" + lang : ""
-    const newUrl = url + (url.indexOf("?") > 0 ? "&" : "?") + "partial=true" + lang1
+    const newUrl = url + (url.indexOf("?") > 0 ? "&" : "?") + `${resources.partial}=true` + lang1
     showLoading()
     fetch(newUrl, { method: "GET", headers: getHeaders() })
       .then((response) => {
