@@ -1,3 +1,38 @@
+function openReview(id: string) {
+  const modalDiv = document.getElementById(id)
+  if (modalDiv) {
+    modalDiv.style.display = "flex"
+  }
+}
+function cancelReview(id: string) {
+  const modalDiv = document.getElementById(id)
+  if (modalDiv) {
+    modalDiv.style.display = "none"
+  }
+}
+function submitReview(e: Event) {
+  e.preventDefault()
+  const btn = e.target as HTMLButtonElement
+  const form = btn.form
+  if (form) {
+    const review = getValue(form, "review") as string
+    const picker = form.querySelector(".star-picker") as HTMLElement
+    if (picker) {
+      const v = picker.dataset.v
+      if (!v) {
+        alert("Please select rating")
+      } else {
+        const rate = parseInt(v, 10)
+        const obj = { rate, review }
+        console.log("Object " + JSON.stringify(obj))
+        const modal = findParent(form, "modal-bg")
+        if (modal) {
+          modal.style.display = "none"
+        }
+      }
+    }
+  }
+}
 function starOnMouseEnter(e: Event) {
   const star = e.target as HTMLElement
   const picker = star.parentElement as HTMLElement
