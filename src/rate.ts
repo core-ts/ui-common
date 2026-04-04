@@ -20,15 +20,30 @@ function submitReview(e: Event) {
     if (picker) {
       const v = picker.dataset.v
       if (!v) {
-        alert("Please select rating")
+        alertWarning("Please select rating")
       } else {
         const rate = parseInt(v, 10)
-        const obj = { rate, review }
-        console.log("Object " + JSON.stringify(obj))
-        const modal = findParent(form, "modal-bg")
-        if (modal) {
-          modal.style.display = "none"
-        }
+        const data = { rate, review }
+        const resource = getResource()
+        const url = getCurrentURL()
+        fetch(url, {
+          method: "POST",
+          headers: getHttpHeaders(),
+          body: JSON.stringify(data),
+        })
+          .then((response) => {
+            hideLoading()
+            if (response.ok) {
+              alertSuccess("Review is submitted successfully")
+              const modal = findParent(form, "modal-bg")
+              if (modal) {
+                modal.style.display = "none"
+              }
+            } else {
+              handleJsonError(response, resource, form)
+            }
+          })
+          .catch((err) => handleError(err, resource.error_network))
       }
     }
   }
@@ -56,7 +71,6 @@ function starOnClick(e: Event) {
   const starts = picker.querySelectorAll("span")
   highlight(starts, value)
 }
-
 function highlight(stars: NodeListOf<HTMLSpanElement>, r: number) {
   stars.forEach((s) => s.classList.toggle("active", r >= (s.dataset.v as any)))
 }
