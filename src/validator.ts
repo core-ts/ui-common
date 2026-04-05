@@ -650,7 +650,7 @@ function correctNumber(v: string, locale?: Locale | null | string, keepFormat?: 
   return r
 }
 
-function intOnFocus(event: Event): void {
+function integerOnFocus(event: Event): void {
   const ele = event.currentTarget as HTMLInputElement
   handleMaterialFocus(ele)
   if (ele.readOnly || ele.disabled || ele.value.length === 0) {
@@ -754,7 +754,7 @@ function checkNumber(target: HTMLInputElement, locale?: Locale | string | null, 
 }
 function checkNumberOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement
-  const separator = target.getAttribute("data-decimal-separator")
+  const separator = getDecimalSeparator(target)
   const v = checkNumberEvent(event, separator)
   if (typeof v === "string") {
     target.value = v
@@ -762,7 +762,7 @@ function checkNumberOnBlur(event: Event) {
 }
 function numberOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement
-  const separator = target.getAttribute("data-decimal-separator")
+  const separator = getDecimalSeparator(target)
   const v = checkNumberEvent(event, separator)
   if (typeof v === "string") {
     const attr = target.getAttribute("data-scale")
@@ -773,7 +773,7 @@ function numberOnBlur(event: Event) {
 }
 function currencyOnBlur(event: Event) {
   const target = event.currentTarget as HTMLInputElement
-  const separator = target.getAttribute("data-decimal-separator")
+  const separator = getDecimalSeparator(target)
   const v = checkNumberEvent(event, separator)
   if (typeof v === "string") {
     const attr = target.getAttribute("data-scale")
@@ -833,8 +833,8 @@ function removeSeparators(input?: string | null): string {
   // Avoid creating a large intermediate array via slice
   return write === len ? input : buffer.slice(0, write).join("")
 }
-function formatInt(v?: number | null, groupSeparator: string = ","): string {
-  if (v === null || v === undefined || !Number.isFinite(v)) {
+function formatInteger(v?: number | null, groupSeparator: string = ","): string {
+  if (v == null || !Number.isFinite(v)) {
     return ""
   }
 
