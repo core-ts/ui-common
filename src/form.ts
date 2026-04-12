@@ -547,7 +547,7 @@ function unhideElement(ele: HTMLElement | null | undefined): boolean {
 }
 function isHidden(ele: HTMLElement | null | undefined): boolean {
   if (ele) {
-    return ele.hidden || ele.style.display === "none"
+    return (ele.hidden as boolean) || ele.style.display === "none"
   }
   return true
 }
