@@ -377,47 +377,67 @@ function normalizeInteger(s?: string | null): string {
 
   return j === len ? buf.join("") : buf.slice(0, j).join("")
 }
-// Keep a single dot
-function removeSeparators(s?: string | null): string {
-  if (!s) {
-    return ""
-  }
+function bufferToString(buf: Uint16Array, length: number): string {
+  const chunkSize = 0x8000 // 32k safe chunk
   let result = ""
-  let hasDot = false
 
-  for (let i = 0; i < s.length; i++) {
-    const c = s.charCodeAt(i)
-
-    if (c >= 48 && c <= 57) {
-      result += s[i]
-    } else if (c === 46 && !hasDot) {
-      result += "."
-      hasDot = true
-    }
+  for (let i = 0; i < length; i += chunkSize) {
+    const sub = buf.subarray(i, i + chunkSize)
+    result += String.fromCharCode.apply(null, sub as any)
   }
 
   return result
 }
-// Keep digits 0–9 ; Replace , and ٫ (Arabic decimal separator) → . ; Remove everything else
-function normalizeNumber(s?: string | null): string {
-  if (!s) {
+// Keep a single dot
+function removeSeparators(input?: string | null): string {
+  if (!input) {
     return ""
   }
-  const len = s.length
-  const buf = new Array<string>(len)
-  let j = 0
+  const len = input.length
+  const buffer = new Uint16Array(len)
+  let write = 0
 
   for (let i = 0; i < len; i++) {
-    const c = s.charCodeAt(i)
-
-    if (c >= 48 && c <= 57) {
-      buf[j++] = s[i]
-    } else if (c === 44 || c === 1643) {
-      buf[j++] = "."
+    const c = input.charCodeAt(i)
+    if ((c >= 48 && c <= 57) || c === 46) {
+      buffer[write++] = c
     }
   }
 
-  return j === len ? buf.join("") : buf.slice(0, j).join("")
+  return bufferToString(buffer, write)
+}
+// Keep digits 0–9 ; Replace , and ٫ (Arabic decimal separator) → . ; Remove everything else => this solution win when > 10K+ chars, < 100 char: Array<string> version can actually be just as fast or faster due to lower overhead
+function normalizeNumber(input?: string | null): string {
+  if (!input) {
+    return ""
+  }
+  const len = input.length
+  const buf = new Uint16Array(len)
+  let j = 0
+
+  for (let i = 0; i < len; i++) {
+    const c = input.charCodeAt(i)
+
+    // '0' - '9'
+    if (c >= 48 && c <= 57) {
+      buf[j++] = c
+    }
+    // ',' or '٫' (U+066B)
+    else if (c === 44 || c === 1643) {
+      buf[j++] = 46 // '.'
+    }
+  }
+
+  // Convert buffer → string (batched to avoid stack overflow)
+  const CHUNK = 0x8000 // 32K safe chunk
+  let result = ""
+
+  for (let i = 0; i < j; i += CHUNK) {
+    const end = i + CHUNK < j ? i + CHUNK : j
+    result += String.fromCharCode.apply(null, buf.subarray(i, end) as unknown as number[])
+  }
+
+  return result
 }
 function decodeFromElement<T>(parent: HTMLElement | null | undefined, fields: string[]): T {
   const obj = {} as any
