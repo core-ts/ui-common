@@ -377,6 +377,7 @@ function normalizeInteger(s?: string | null): string {
 
   return j === len ? buf.join("") : buf.slice(0, j).join("")
 }
+// Use this function when input can be large (e.g. > ~60k chars), use chunking
 function bufferToString(buf: Uint16Array, length: number): string {
   const chunkSize = 0x8000 // 32k safe chunk
   let result = ""
