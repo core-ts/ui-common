@@ -345,71 +345,79 @@ function normalizePhone(s?: string | null): string {
   if (!s) {
     return ""
   }
-  let result = ""
+  const len = s.length
+  const buf = new Array<string>(len)
+  let j = 0
 
-  for (let i = 0; i < s.length; i++) {
+  for (let i = 0; i < len; i++) {
     const c = s.charCodeAt(i)
 
-    // '+' = 43
-    // '0' = 48
-    // '9' = 57
     if (c === 43 || (c >= 48 && c <= 57)) {
-      result += s[i]
+      buf[j++] = s[i]
     }
   }
 
-  return result
+  return j === len ? buf.join("") : buf.slice(0, j).join("")
 }
 function normalizeInteger(s?: string | null): string {
   if (!s) {
     return ""
   }
-  const buf: string[] = []
-  let idx = 0
-  for (let i = 0; i < s.length; i++) {
+  const len = s.length
+  const buf = new Array<string>(len)
+  let j = 0
+
+  for (let i = 0; i < len; i++) {
     const c = s.charCodeAt(i)
+
     if (c >= 48 && c <= 57) {
-      buf[idx++] = s[i]
+      buf[j++] = s[i]
     }
   }
-  return buf.join("")
+
+  return j === len ? buf.join("") : buf.slice(0, j).join("")
 }
+// Keep a single dot
 function removeSeparators(s?: string | null): string {
   if (!s) {
     return ""
   }
   let result = ""
+  let hasDot = false
+
   for (let i = 0; i < s.length; i++) {
     const c = s.charCodeAt(i)
 
-    // '0'–'9' => 48–57, '.' => 46
-    if ((c >= 48 && c <= 57) || c === 46) {
+    if (c >= 48 && c <= 57) {
       result += s[i]
+    } else if (c === 46 && !hasDot) {
+      result += "."
+      hasDot = true
     }
   }
+
   return result
 }
 // Keep digits 0–9 ; Replace , and ٫ (Arabic decimal separator) → . ; Remove everything else
-function normalizeNumber(input?: string | null): string {
-  if (!input) {
+function normalizeNumber(s?: string | null): string {
+  if (!s) {
     return ""
   }
-  const len = input.length
-  let result = ""
+  const len = s.length
+  const buf = new Array<string>(len)
+  let j = 0
 
   for (let i = 0; i < len; i++) {
-    const c = input.charCodeAt(i)
+    const c = s.charCodeAt(i)
 
-    // '0' - '9'
     if (c >= 48 && c <= 57) {
-      result += input[i]
-    }
-    // ',' (44) or '٫' (U+066B = 1643) Arabic decimal separator
-    else if (c === 44 || c === 1643) {
-      result += "."
+      buf[j++] = s[i]
+    } else if (c === 44 || c === 1643) {
+      buf[j++] = "."
     }
   }
-  return result
+
+  return j === len ? buf.join("") : buf.slice(0, j).join("")
 }
 function decodeFromElement<T>(parent: HTMLElement | null | undefined, fields: string[]): T {
   const obj = {} as any
