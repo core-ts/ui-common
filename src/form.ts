@@ -377,35 +377,27 @@ function normalizeInteger(s?: string | null): string {
 
   return j === len ? buf.join("") : buf.slice(0, j).join("")
 }
-// Use this function when input can be large (e.g. > ~60k chars), use chunking
-function bufferToString(buf: Uint16Array, length: number): string {
-  const chunkSize = 0x8000 // 32k safe chunk
-  let result = ""
 
-  for (let i = 0; i < length; i += chunkSize) {
-    const sub = buf.subarray(i, i + chunkSize)
-    result += String.fromCharCode.apply(null, sub as any)
-  }
-
-  return result
-}
 // Keep a single dot
 function removeSeparators(input?: string | null): string {
   if (!input) {
     return ""
   }
   const len = input.length
-  const buffer = new Uint16Array(len)
+  const buffer = new Uint16Array(len) // preallocate max possible
   let write = 0
 
   for (let i = 0; i < len; i++) {
     const c = input.charCodeAt(i)
+
+    // '0'–'9' (48–57), '.' (46)
     if ((c >= 48 && c <= 57) || c === 46) {
       buffer[write++] = c
     }
   }
 
-  return bufferToString(buffer, write)
+  // Convert only the used portion to string
+  return String.fromCharCode.apply(null, buffer.subarray(0, write) as any)
 }
 // Keep digits 0–9 ; Replace , and ٫ (Arabic decimal separator) → . ; Remove everything else => this solution win when > 10K+ chars, < 100 char: Array<string> version can actually be just as fast or faster due to lower overhead
 function normalizeNumber(input?: string | null): string {
